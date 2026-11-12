@@ -163,7 +163,7 @@
     <div style="background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
       <div style="flex: 1; min-width: 200px;">
         <strong style="color: var(--primary);">📦 تحديث المخزون والأسعار (CSV)</strong>
-        <p style="margin: 4px 0 0; font-size: 0.85rem; color: var(--text-muted);">ارفع ملف CSV يحتوي على أعمدة <code>unique_id</code> و <code>stock</code> (واختيارياً <code>price_usd</code>)</p>
+        <p style="margin: 4px 0 0; font-size: 0.85rem; color: var(--text-muted);">ارفع ملف CSV يحتوي على أعمدة <code>id</code> و <code>stock</code> (واختيارياً <code>price</code>)</p>
       </div>
       <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
       <button id="downloadSampleBtn" class="btn-outline" style="padding: 10px 20px; background: #fff; border-color: var(--primary); color: var(--primary);">📥 تنزيل نموذج</button>
@@ -444,7 +444,7 @@
     const downloadSampleBtn = document.getElementById('downloadSampleBtn');
     if (downloadSampleBtn) {
       downloadSampleBtn.onclick = () => {
-        const csvContent = "unique_id,name,brand,category,stock,price_usd\n" +
+        const csvContent = "id,name,brand,category,stock,price\n" +
                            "5001,منتج تجريبي 1,ATARAXY,شاحن,150,5.99\n" +
                            "5002,منتج تجريبي 2,أخرى,سماعة,80,12.50\n";
         const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });

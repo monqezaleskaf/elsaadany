@@ -29,15 +29,15 @@
     // 3. تحليل رأس الجدول
     const headers = parseCSVLine(lines[0].trim()).map(h => h.trim().toLowerCase());
     
-    const idIdx = headers.indexOf('unique_id');
+    const idIdx = headers.indexOf('id');
     const stockIdx = headers.indexOf('stock');
     const nameIdx = headers.indexOf('name');
-    const priceIdx = headers.indexOf('price_usd');
+    const priceIdx = headers.indexOf('price');
     const brandIdx = headers.indexOf('brand');
     const catIdx = headers.indexOf('category');
 
     if (idIdx === -1 || nameIdx === -1) {
-      return jsonError('الملف يجب أن يحتوي على الأقل على: unique_id, name', 400);
+      return jsonError('الملف يجب أن يحتوي على الأقل على: id, name', 400);
     }
 
     // 4. تجهيز جميع الاستعلامات في مصفوفة (Batch)
