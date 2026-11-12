@@ -12,11 +12,11 @@
   --primary-light: #E60000;
   --accent: #D4AF37;
   --accent-dark: #B8860B;
-  --bg:            #F5F7FA;
-  --card-bg:       #FFFFFF;
-  --text:          #1A1A2E;
+  --bg: #FFFFFF;
+  --card-bg: #FAFAFA;
+  --text: #111111;
   --text-muted:    #6B7280;
-  --border:        #E5E7EB;
+  --border: #D4AF37;
   --success:       #10B981;
   --danger:        #EF4444;
   --whatsapp:      #25D366;
@@ -53,8 +53,7 @@ img { max-width: 100%; display: block; }
 /* ============================================================
    HEADER
    ============================================================ */
-.site-header {
-  background: var(--primary);
+.site-header { background: #111111;
   color: #fff;
   padding: 12px 0;
   position: sticky;
