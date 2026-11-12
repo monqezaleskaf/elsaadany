@@ -278,7 +278,7 @@
       // الساعة
       const timeStr = now.toLocaleTimeString('ar-EG', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
       // التاريخ
-      const dateStr = now.toLocaleDateString('ar-EG', { timeZone: 'Africa/Cairo', weekday: 'long', day: 'numeric', month: 'long' });
+      const dateStr = now.toLocaleDateString('ar-EG', { timeZone: 'Africa/Cairo', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       
       const clockEl = document.getElementById('headerClock');
       if (clockEl) {
