@@ -2590,3 +2590,28 @@ body { background-color: #FAFAFA !important; color: #111111 !important; }
         flex-wrap: wrap !important; /* السماح للأزرار بالنزول لسطر جديد إذا لزم */
     }
 }
+
+/* ============================================================
+   🔠 تكبير الاسم العربي للمتجر ليتناسب مع الإنجليزي
+   ============================================================ */
+.brand-text .ar {
+    font-size: 1.4rem !important; /* تكبير الخط العربي */
+    font-weight: 800 !important;  /* زيادة سماكة الخط */
+    color: #ffffff !important;    /* لون أبيض ناصع */
+    line-height: 1.2 !important;
+}
+
+/* تصغير الاسم الإنجليزي قليلاً ليتناسب */
+.brand-text .en {
+    font-size: 1rem !important;
+}
+
+/* في الموبايل نكبّر العربي أكثر قليلاً ليكون واضحاً جداً */
+@media (max-width: 768px) {
+    .brand-text .ar {
+        font-size: 1.6rem !important;
+    }
+    .brand-text .en {
+        font-size: 1.1rem !important;
+    }
+}
