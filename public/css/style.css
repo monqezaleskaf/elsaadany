@@ -2389,3 +2389,28 @@ body { background-color: #FAFAFA !important; color: #111111 !important; }
     border-color: #FFD700 !important;
     box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3) !important;
 }
+
+/* ============================================================
+   ✨ توحيد أزرار الماركات وتكبير الاسم الإنجليزي ✨
+   ============================================================ */
+
+/* 1. جعل زر "جميع الماركات" يطابق زر "الكل" */
+.brand-chip[data-brand="all"], 
+.brand-chip.active {
+    background: linear-gradient(135deg, #C00000, #800000) !important;
+    color: #ffffff !important;
+    border: 2px solid #FFD700 !important;
+    box-shadow: 0 4px 12px rgba(192, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3) !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+    font-weight: 800 !important;
+}
+
+/* 2. تكبير وتوضيح كلمة Elsaadany Store بجانب الشعار */
+.brand-text .en {
+    color: #F8F8F8 !important; /* لون أبيض ناصع للوضوح */
+    font-size: 1.15rem !important; /* تكبير الخط */
+    font-weight: 700 !important; /* زيادة سماكة الخط */
+    letter-spacing: 0.5px !important; /* مسافة بين الحروف لتبدو أفخم */
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4) !important; /* ظل خفيف لإبراز النص */
+    margin-top: 4px !important; /* مسافة بسيطة عن الاسم العربي */
+}
