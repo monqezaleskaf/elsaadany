@@ -156,7 +156,7 @@
       }
       
       saveCart(cart);
-      alert(`✅ تمت إضافة العرض "${offer.title}" للسلة بسعر ج.م ${finalPrice.toFixed(2)}`);
+      alert(`✅ تمت إضافة العرض "${offer.title}" للسلة بسعر  ${finalPrice.toFixed(2)}`);
     }
 
     // جلب العروض
@@ -210,8 +210,8 @@
             <div class="offer-footer">
               <div class="offer-price-row">
                 <div>
-                  <div class="offer-old-price">ج.م ${originalTotal.toFixed(2)}</div>
-                  <div class="offer-new-price">ج.م ${finalPrice.toFixed(2)}</div>
+                  <div class="offer-old-price"> ${originalTotal.toFixed(2)}</div>
+                  <div class="offer-new-price"> ${finalPrice.toFixed(2)}</div>
                 </div>
                 <span class="offer-discount">${discountPercent > 0 ? `وفّر ${discountPercent.toFixed(1)}%` : "عرض خاص"}</span>
               </div>
