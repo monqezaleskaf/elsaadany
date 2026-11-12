@@ -2484,3 +2484,40 @@ body { background-color: #FAFAFA !important; color: #111111 !important; }
     border-color: #C00000 !important; /* إطار أحمر */
     box-shadow: none !important;
 }
+
+/* ============================================================
+   💥 الحل الجذري: محو أي ظل أو فلتر نهائياً 💥
+   ============================================================ */
+
+.brand-chip, 
+.brand-chip.active, 
+.brand-chip[data-brand="all"],
+.category-chip, 
+.category-chip.active,
+.brand-buttons,
+.category-bar,
+.brand-selector,
+.category-scroll {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    background-image: none !important; /* إزالة أي تدرجات قد تسبب الوهم */
+}
+
+/* إعادة تطبيق اللون الأحمر والإطار الذهبي بشكل صارم بدون أي ظل */
+.brand-chip.active,
+.brand-chip[data-brand="all"],
+.category-chip.active {
+    background: #C00000 !important; /* لون أحمر صريح بدون تدرج */
+    color: #ffffff !important;
+    border: 2px solid #D4AF37 !important; /* إطار ذهبي */
+}
+
+.brand-chip,
+.category-chip {
+    background: #ffffff !important;
+    border: 1px solid #D4AF37 !important;
+}
