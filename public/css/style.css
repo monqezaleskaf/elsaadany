@@ -2365,3 +2365,27 @@ body { background-color: #FAFAFA !important; color: #111111 !important; }
     border-color: #D4AF37 !important;
     color: #C00000 !important;
 }
+
+/* ============================================================
+   ✨ تحسين حدود أزرار الأقسام والماركات (Chips) ✨
+   ============================================================ */
+
+.category-chip, .brand-chip {
+    border: 2px solid #D4AF37 !important; /* زيادة سمك الحد الذهبي */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1), inset 0 0 4px rgba(212, 175, 55, 0.3) !important; /* ظل خارجي وإضاءة داخلية */
+    font-weight: 800 !important; /* زيادة سماكة الخط */
+    transition: all 0.2s ease !important;
+}
+
+/* عند تحديد القسم (Active) */
+.category-chip.active, .brand-chip.active {
+    border: 2px solid #FFD700 !important; /* ذهبي لامع */
+    box-shadow: 0 4px 12px rgba(192, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3) !important; /* ظل أحمر وإضاءة داخلية بيضاء */
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important; /* ظل للنص لبروزه */
+}
+
+/* عند تمرير الماوس (Hover) على الأزرار غير النشطة */
+.category-chip:hover, .brand-chip:hover {
+    border-color: #FFD700 !important;
+    box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3) !important;
+}
