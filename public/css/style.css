@@ -2414,3 +2414,31 @@ body { background-color: #FAFAFA !important; color: #111111 !important; }
     text-shadow: 0 2px 4px rgba(0,0,0,0.4) !important; /* ظل خفيف لإبراز النص */
     margin-top: 4px !important; /* مسافة بسيطة عن الاسم العربي */
 }
+
+/* ============================================================
+   🛠️ إصلاحات نهائية للأزرار (بدون ظل أحمر + إطار ذهبي كامل) 🛠️
+   ============================================================ */
+
+/* 1. زر "الكل" و زر "جميع الماركات" */
+.category-chip.active, 
+.brand-chip.active,
+.brand-chip:first-child, /* غالباً زر جميع الماركات هو الأول */
+.brand-chip[data-brand="all"] {
+    background: linear-gradient(135deg, #C00000, #800000) !important;
+    color: #ffffff !important;
+    border: 2px solid #FFD700 !important; /* الإطار الذهبي اللامع */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15) !important; /* ظل رمادي/أسود خفيف جداً بدل الأحمر */
+    font-weight: 800 !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+}
+
+/* 2. إزالة أي ظل أحمر من باقي أزرار الماركات والأقسام */
+.category-chip, .brand-chip {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08) !important; /* ظل طبيعي ناعم */
+    border: 1px solid #D4AF37 !important; /* حدود ذهبية واضحة */
+}
+
+.category-chip:hover, .brand-chip:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12) !important;
+    border-color: #FFD700 !important;
+}
