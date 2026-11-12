@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "wrangler": "^4.161.0"
+  },
+  "allowScripts": {
+    "workerd@1.20261110.1": true,
+    "esbuild@0.28.2": true
+  }
+}
