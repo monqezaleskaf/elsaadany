@@ -129,7 +129,7 @@
         </div>
         <div class="summary-row total">
           <span>المجموع:</span>
-          <span id="summaryTotal">$0.00</span>
+          <span id="summaryTotal">ج.م 0.00</span>
         </div>
 
         <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border);">
@@ -213,13 +213,13 @@
               <ul style="font-size:0.8rem; color:var(--text-muted); margin: 4px 0; padding-right: 15px;">
                 ${itemsList}
               </ul>
-              <div class="cart-item-price">$${item.price.toFixed(2)}</div>
+              <div class="cart-item-price">ج.م ${item.price.toFixed(2)}</div>
               <div class="cart-item-controls">
                 <button class="qty-btn" data-act="minus">−</button>
                 <span style="min-width:30px; text-align:center; font-weight:700;">${item.quantity}</span>
                 <button class="qty-btn" data-act="plus">+</button>
                 <span style="color:var(--text-muted); font-size:0.8rem; margin-right:auto;">
-                  ${item.original_total ? `الأصلي: $${item.original_total.toFixed(2)}` : ''}
+                  ${item.original_total ? `الأصلي: ج.م ${item.original_total.toFixed(2)}` : ''}
                 </span>
               </div>
             </div>
@@ -233,7 +233,7 @@
             </div>
             <div class="cart-item-info">
               <div class="cart-item-name">${escapeHtml(item.name)}</div>
-              <div class="cart-item-price">$${item.price.toFixed(2)}</div>
+              <div class="cart-item-price">ج.م ${item.price.toFixed(2)}</div>
               <div class="cart-item-controls">
                 <button class="qty-btn" data-act="minus">−</button>
                 <span style="min-width:30px; text-align:center; font-weight:700;">${item.quantity}</span>
@@ -271,7 +271,7 @@
       });
 
       summaryCount.textContent = count;
-      summaryTotal.textContent = `$${total.toFixed(2)}`;
+      summaryTotal.textContent = `ج.م ${total.toFixed(2)}`;
     }
 
     function escapeHtml(s) {
@@ -354,11 +354,11 @@
 
         cart.forEach((item, index) => {
           const itemTotal = (item.price * item.quantity).toFixed(2);
-          waMessage += ` ${index + 1}. ${item.name} (الكمية: ${item.quantity}) = $${itemTotal}\n`;
+          waMessage += ` ${index + 1}. ${item.name} (الكمية: ${item.quantity}) = ج.م ${itemTotal}\n`;
         });
 
         waMessage += `--------------------\n`;
-        waMessage += ` *الإجمالي:* $${total.toFixed(2)}\n`;
+        waMessage += ` *الإجمالي:* ج.م ${total.toFixed(2)}\n`;
         waMessage += ` *رابط الفاتورة:* ${location.origin}/invoice.html?id=${data.order_id}\n`;
         waMessage += ` *رقم الطلب:* #${data.order_id}`;
 

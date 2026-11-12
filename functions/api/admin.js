@@ -18,7 +18,8 @@
     if (method === 'GET') {
       const status = new URL(request.url).searchParams.get('status') || 'pending';
 
-      const orders = await env.DB.prepare(
+      // إجبار المتصفح على قراءة التاريخ كـ UTC
+      const rawOrders = await env.DB.prepare(
         'SELECT * FROM orders WHERE status = ? ORDER BY created_at DESC'
       ).bind(status).all();
 

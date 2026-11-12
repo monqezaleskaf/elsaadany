@@ -219,7 +219,7 @@ function buildProductCard(p) {
       <div class="product-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
       <div class="product-meta">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-          <span class="product-price">$${Number(p.price).toFixed(2)}</span>
+          <span class="product-price">ج.م ${Number(p.price).toFixed(2)}</span>
           <span class="qty-total" style="display:none; font-size:0.85rem; color:var(--success); font-weight:700;"></span>
         </div>
         <span class="product-stock ${p.stock <= 5 ? 'low' : ''}">${outOfStock ? 'نفد' : `مخزون: ${p.stock}`}</span>
@@ -257,7 +257,7 @@ function buildProductCard(p) {
     if (totalEl) {
       if (v > 1) {
         const total = (v * Number(p.price)).toFixed(2);
-        totalEl.textContent = `$${total}`;
+        totalEl.textContent = `ج.م ${total}`;
         totalEl.style.display = 'inline';
       } else {
         totalEl.style.display = 'none';
@@ -398,7 +398,7 @@ function renderProductModal(p) {
   document.getElementById('pmName').textContent = p.name;
   document.getElementById('pmBrand').textContent = p.brand || '';
   document.getElementById('pmCategory').textContent = p.category || '';
-  document.getElementById('pmPrice').textContent = `$${Number(p.price).toFixed(2)}`;
+  document.getElementById('pmPrice').textContent = `ج.م ${Number(p.price).toFixed(2)}`;
   document.getElementById('pmStock').textContent = outOfStock ? 'نفد' : p.stock;
 
   const img = document.getElementById('pmImg');
@@ -468,7 +468,7 @@ function renderProductModal(p) {
     if (totalEl) {
       if (v > 1) {
         const total = (v * Number(p.price)).toFixed(2);
-        totalEl.textContent = `$${total}`;
+        totalEl.textContent = `ج.م ${total}`;
         totalEl.style.display = 'block';
       } else {
         totalEl.style.display = 'none';

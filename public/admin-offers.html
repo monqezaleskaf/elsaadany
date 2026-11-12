@@ -290,7 +290,7 @@
         filtered.forEach((p, index) => {
           const item = document.createElement('div');
           item.style.cssText = 'padding: 10px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem;';
-          item.textContent = `#${p.id} - ${p.name} ($${p.price})`;
+          item.textContent = `#${p.id} - ${p.name} (ج.م ${p.price})`;
           item.dataset.index = index;
           
           item.onmouseover = () => {
