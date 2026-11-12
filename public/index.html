@@ -23,7 +23,13 @@
         </div>
       </a>
 
-      <!-- أزرار (يسار) -->
+              <!-- الساعة والتاريخ -->
+        <div class="header-clock" id="headerClock" style="display: none; align-items: center; gap: 5px; background: #111; border: 1px solid #D4AF37; padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; margin-left: 15px;">
+            <span id="clockTime" style="font-weight: 800; color: #D4AF37;"></span>
+            <span id="clockDate" style="color: #fff; opacity: 0.8;"></span>
+        </div>
+
+        <!-- أزرار (يسار) -->
       <div class="header-actions">
         <!-- الخريطة -->
         <a href="https://maps.app.goo.gl/ERV42KrYzVuRzN9z9" target="_blank" rel="noopener" class="icon-btn" style="background: #fff; color: #374151; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -266,5 +272,32 @@
     </a>
   </nav>
 
+  <script>
+    function updateClock() {
+      const now = new Date();
+      // الساعة
+      const timeStr = now.toLocaleTimeString('ar-EG', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      // التاريخ
+      const dateStr = now.toLocaleDateString('ar-EG', { timeZone: 'Africa/Cairo', weekday: 'long', day: 'numeric', month: 'long' });
+      
+      const clockEl = document.getElementById('headerClock');
+      if (clockEl) {
+        clockEl.style.display = 'flex';
+        clockEl.style.alignItems = 'center';
+        clockEl.style.gap = '5px';
+        clockEl.style.background = '#111';
+        clockEl.style.border = '1px solid #D4AF37';
+        clockEl.style.padding = '5px 12px';
+        clockEl.style.borderRadius = '8px';
+        clockEl.style.fontSize = '0.85rem';
+        clockEl.style.marginLeft = '15px';
+        
+        document.getElementById('clockTime').textContent = timeStr;
+        document.getElementById('clockDate').textContent = ' - ' + dateStr;
+      }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
 </body>
 </html>
