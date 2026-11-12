@@ -273,8 +273,8 @@
       card.className = 'order-card';
 
       const date = new Date(o.created_at);
-      const syriaDate = new Date(date.getTime() + (3 * 60 * 60 * 1000));
-      const dateStr = syriaDate.toLocaleString('ar-EG', { timeZone: 'Asia/Damascus' });
+      const cairoDate = date;
+      const dateStr = cairoDate.toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
       const isPending = o.status === 'pending';
       const statusLabels = { pending: 'معلقة', approved: 'موافق عليها', rejected: 'مرفوضة' };
 

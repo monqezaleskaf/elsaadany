@@ -343,7 +343,7 @@
       if (product.created_at) {
         const d = new Date(product.created_at);
         if (!isNaN(d.getTime())) {
-          dateStr = d.toISOString().split('T')[0];
+          dateStr = d.toLocaleDateString('en-CA', { timeZone: 'Africa/Cairo' });
         }
       }
       document.getElementById('editProductDate').value = dateStr;
