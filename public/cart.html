@@ -437,7 +437,8 @@
           (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            if (map && marker) {
+            updateLocation(lat, lng);
+              if (map && marker) {
               map.setView([lat, lng], 15);
               marker.setLatLng([lat, lng]);
               updateLocation(lat, lng);
