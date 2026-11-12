@@ -2521,3 +2521,37 @@ body { background-color: #FAFAFA !important; color: #111111 !important; }
     background: #ffffff !important;
     border: 1px solid #D4AF37 !important;
 }
+
+/* ============================================================
+   👑 التصميم النهائي الموحد للأزرار (بدون ظلال) 👑
+   ============================================================ */
+
+/* الزر النشط (سواء كان "الكل" أو "جميع الماركات") */
+.category-chip.active, 
+.brand-chip.active {
+    background: #C00000 !important; /* أحمر صريح */
+    color: #ffffff !important;
+    border: 2px solid #D4AF37 !important; /* إطار ذهبي */
+    font-weight: 800 !important;
+    box-shadow: none !important; /* لا ظل */
+    text-shadow: none !important; /* لا ظل للنص */
+}
+
+/* الأزرار غير النشطة (البيضاء) */
+.category-chip, 
+.brand-chip {
+    background: #ffffff !important;
+    color: #111111 !important;
+    border: 1px solid #D4AF37 !important; /* إطار ذهبي رفيع */
+    font-weight: 600 !important;
+    box-shadow: none !important;
+}
+
+/* تأثير عند تمرير الماوس */
+.category-chip:hover, 
+.brand-chip:hover {
+    background: #FFF8E7 !important; /* أبيض مائل للذهبي */
+    border-color: #C00000 !important; /* إطار أحمر */
+    color: #C00000 !important;
+    box-shadow: none !important;
+}

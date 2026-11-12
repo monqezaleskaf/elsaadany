@@ -121,7 +121,7 @@ function renderBrands() {
   
   // 1. إضافة زر "جميع الماركات" في البداية
   const allBtn = document.createElement('button');
-  allBtn.className = 'btn-primary';
+  allBtn.className = 'category-chip active';
   allBtn.id = 'showAllBtn';
   allBtn.style.flexShrink = '0';
   allBtn.innerHTML = 'جميع الماركات';
