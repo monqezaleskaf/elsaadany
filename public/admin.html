@@ -458,23 +458,7 @@
     // ---------- INIT ----------
     if (adminPassword) showAdmin();
   </script>
-    <script>
-      function recalculateTotal(input) {
-        const orderId = input.getAttribute('data-order-id');
-        const orderCard = input.closest('.order-card');
-        const inputs = orderCard.querySelectorAll('.qty-input');
-        let newTotal = 0;
-        inputs.forEach(inp => {
-          const price = parseFloat(inp.getAttribute('data-price'));
-          const qty = parseInt(inp.value) || 0;
-          newTotal += (price * qty);
-        });
-        const totalDisplay = orderCard.querySelector('.order-total-display span');
-        if (totalDisplay) {
-          totalDisplay.textContent = newTotal.toFixed(2);
-        }
-      }
-    </script>
+    
       <script>
       document.addEventListener('input', function(e) {
         if (e.target.classList.contains('qty-input')) {
@@ -493,7 +477,13 @@
                 const priceText = spans[1].textContent.trim();
                 const price = parseFloat(priceText) || 0;
                 const qty = parseInt(inp.value) || 0;
-                newTotal += (price * qty);
+                const rowTotal = price * qty;
+                newTotal += rowTotal;
+                
+                const subTotalEl = row.querySelector('.item-subtotal');
+                if (subTotalEl) {
+                  subTotalEl.textContent = rowTotal.toFixed(2);
+                }
               }
             }
           });
