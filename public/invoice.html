@@ -925,7 +925,7 @@
         itemsBody.appendChild(row);
       });
 
-      $('#invTotal').textContent = `${total.toFixed(2)} &lrm;ج.م`;
+      $('#invTotal').textContent = `${total.toFixed(2)} ج.م`;
 
         // الأزرار
         renderActions(o);
@@ -975,7 +975,7 @@
         waMessage += `▪️ ${item.name} (الكمية: ${item.quantity}) = <span class="price-ltr">${(item.quantity * item.price).toFixed(2)} ج.م</span>\n`;
       });
       waMessage += `------------------------\n`;
-      waMessage += `💰 *الإجمالي:* ${currentOrder.total.toFixed(2)} &lrm;ج.م\n`;
+      waMessage += `💰 *الإجمالي:* ${currentOrder.total.toFixed(2)} ج.م\n`;
       waMessage += `🔗 *رابط الفاتورة:* ${invoiceUrl}\n`;
       waMessage += `⚠️ *يرجى مراجعة الطلب.*`;
       
