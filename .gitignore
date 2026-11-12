@@ -1,0 +1,11 @@
+﻿node_modules/
+.wrangler/
+.dev.vars
+*.log
+*.bak
+*.bak2
+*.bak3
+*.bak4
+
+public/images/products/
+public-backup-before-rename/

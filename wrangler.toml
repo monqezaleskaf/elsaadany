@@ -1,0 +1,8 @@
+name = "elsaadany"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "elsaadany-db"
+database_id = "6e817ad4-0053-4142-92c3-eb5806828cc8"
