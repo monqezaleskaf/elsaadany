@@ -2615,3 +2615,28 @@ body { background-color: #FAFAFA !important; color: #111111 !important; }
         font-size: 1.1rem !important;
     }
 }
+
+/* ============================================================
+   ⚖️ ضبط أحجام الاسمين ليتناسبا (متجر السعدني / Elsaadany Store)
+   ============================================================ */
+.brand-text .ar {
+    font-size: 1.25rem !important; /* حجم متناسق */
+    font-weight: 800 !important;  
+    line-height: 1.1 !important;
+}
+
+.brand-text .en {
+    font-size: 1.05rem !important; /* تكبير الإنجليزي قليلاً */
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* في الموبايل نضبطها أيضاً لتكون متناسقة */
+@media (max-width: 768px) {
+    .brand-text .ar {
+        font-size: 1.35rem !important;
+    }
+    .brand-text .en {
+        font-size: 1.15rem !important;
+    }
+}
