@@ -23,7 +23,7 @@
         'SELECT * FROM orders WHERE status = ? ORDER BY created_at DESC'
       ).bind(status).all();
 
-      const ordersWithItems = await Promise.all(orders.results.map(async (o) => {
+      const ordersWithItems = await Promise.all(rawOrders.results.map(async (o) => {
         const items = await env.DB.prepare(
           `SELECT oi.*, 
                   COALESCE(p.name, oi.item_name, 'عرض') as name,
