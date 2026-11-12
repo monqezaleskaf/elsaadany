@@ -830,7 +830,7 @@
         <div class="invoice-total">
           <div class="total-row">
             <span>المجموع الكلي:</span>
-            <span id="invTotal">0.00 &lrm;ج.م</span>
+            <span id="invTotal" class="price-ltr">0.00 ج.م</span>
           </div>
         </div>
       </div>
@@ -919,8 +919,8 @@
         row.innerHTML = `
           <td>${index + 1}</td><td class="item-name">${item.name || 'منتج'}</td>
           <td>${item.quantity}</td>
-          <td>${Number(item.price).toFixed(2)} &lrm;ج.م</td>
-          <td class="item-total">${itemTotal.toFixed(2)} &lrm;ج.م</td>
+          <td><span class="price-ltr">${Number(item.price).toFixed(2)} ج.م</span></td>
+          <td class="item-total"><span class="price-ltr">${itemTotal.toFixed(2)} ج.م</span></td>
         `;
         itemsBody.appendChild(row);
       });
@@ -972,7 +972,7 @@
       waMessage += `📞 *الهاتف:* ${currentOrder.customer_phone}\n`;
       waMessage += `📦 *المنتجات المحدثة:*\n`;
       (currentOrder.items || []).forEach(item => {
-        waMessage += `▪️ ${item.name} (الكمية: ${item.quantity}) = ${(item.quantity * item.price).toFixed(2)} &lrm;ج.م\n`;
+        waMessage += `▪️ ${item.name} (الكمية: ${item.quantity}) = <span class="price-ltr">${(item.quantity * item.price).toFixed(2)} ج.م</span>\n`;
       });
       waMessage += `------------------------\n`;
       waMessage += `💰 *الإجمالي:* ${currentOrder.total.toFixed(2)} &lrm;ج.م\n`;

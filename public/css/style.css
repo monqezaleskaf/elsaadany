@@ -2640,3 +2640,28 @@ body { background-color: #FAFAFA !important; color: #111111 !important; }
         font-size: 1.15rem !important;
     }
 }
+
+/* ============================================================
+   💱 إجبار اتجاه العملة على LTR (من اليسار لليمين)
+   ============================================================ */
+[dir="rtl"] .price-ltr, 
+span:contains("ج.م"), 
+strong:contains("ج.م") {
+    direction: ltr !important;
+    unicode-bidi: embed !important;
+    display: inline-block !important;
+}
+
+/* في لوحة الإدارة والفاتورة، نجبر أي نص يحتوي على ج.م */
+body {
+    unicode-bidi: plaintext;
+}
+
+/* ============================================================
+   💱 إجبار اتجاه العملة على LTR للأسعار المحددة
+   ============================================================ */
+.price-ltr {
+    direction: ltr !important;
+    unicode-bidi: embed !important;
+    display: inline-block !important;
+}
