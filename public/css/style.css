@@ -2442,3 +2442,45 @@ body { background-color: #FAFAFA !important; color: #111111 !important; }
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12) !important;
     border-color: #FFD700 !important;
 }
+
+/* ============================================================
+   🚀 الإصلاح القاطع للأزرار والظلال 🚀
+   ============================================================ */
+
+/* 1. إزالة أي ظل أحمر أو ملون من كل الأزرار والحاويات */
+.brand-chip, 
+.brand-chip.active, 
+.brand-chip[data-brand="all"],
+.category-chip, 
+.category-chip.active,
+.brand-buttons,
+.category-bar {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+}
+
+/* 2. جعل زر "جميع الماركات" يطابق زر "الكل" تماماً (لون أحمر متدرج وإطار ذهبي) */
+.brand-chip.active,
+.brand-chip[data-brand="all"],
+.category-chip.active {
+    background: linear-gradient(135deg, #C00000, #800000) !important;
+    color: #ffffff !important;
+    border: 2px solid #D4AF37 !important; /* لون ذهبي موحد */
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+}
+
+/* 3. إعطاء الأزرار غير النشطة إطاراً ذهبياً خفيفاً (لتكون موحدة) */
+.brand-chip,
+.category-chip {
+    border: 1px solid #D4AF37 !important;
+    background: #ffffff !important;
+    color: #111111 !important;
+}
+
+/* 4. عند تمرير الماوس (بدون أي ظل أحمر) */
+.brand-chip:hover,
+.category-chip:hover {
+    background: #FFF8E7 !important; /* لون ذهبي باهت جداً عند التمرير */
+    border-color: #C00000 !important; /* إطار أحمر */
+    box-shadow: none !important;
+}
