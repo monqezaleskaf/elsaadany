@@ -7,11 +7,11 @@
    ============================================================ */
 
 :root {
-  --primary:       #0A2472;
-  --primary-dark:  #001845;
-  --primary-light: #1E3A8A;
-  --accent:        #FFB300;
-  --accent-dark:   #E6A000;
+  --primary: #C00000;
+  --primary-dark: #800000;
+  --primary-light: #E60000;
+  --accent: #D4AF37;
+  --accent-dark: #B8860B;
   --bg:            #F5F7FA;
   --card-bg:       #FFFFFF;
   --text:          #1A1A2E;
