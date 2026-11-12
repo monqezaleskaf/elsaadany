@@ -2555,3 +2555,38 @@ body { background-color: #FAFAFA !important; color: #111111 !important; }
     color: #C00000 !important;
     box-shadow: none !important;
 }
+
+/* ============================================================
+   📱 ترتيب الشريط العلوي في الموبايل (الشعار -> الساعة -> الأزرار)
+   ============================================================ */
+@media (max-width: 768px) {
+    .header-inner {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 12px !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+    }
+
+    /* 1. ترتيب الشعار أولاً */
+    .brand {
+        order: 1 !important;
+        margin-bottom: 5px !important;
+    }
+
+    /* 2. ترتيب الساعة ثانياً ولوحدها في منتصف السطر */
+    .header-clock {
+        order: 2 !important;
+        margin: 0 auto !important; /* توسيط */
+        width: max-content !important;
+        display: flex !important;
+    }
+
+    /* 3. ترتيب الأزرار ثالثاً وأسفل الساعة */
+    .header-actions {
+        order: 3 !important;
+        justify-content: center !important;
+        width: 100% !important;
+        flex-wrap: wrap !important; /* السماح للأزرار بالنزول لسطر جديد إذا لزم */
+    }
+}
