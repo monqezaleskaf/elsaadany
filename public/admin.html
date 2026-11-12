@@ -307,7 +307,7 @@
           </div>
           <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
             <span class="status-badge status-${o.status}">${statusLabels[o.status]}</span>
-            <strong style="color:var(--primary); font-size:1.2rem;"><span >${Number(o.total).toFixed(2)} </span></strong>
+            <strong class="order-total-display" data-order-id="${o.id}" style="color:var(--primary); font-size:1.2rem;"><span>${Number(o.total).toFixed(2)}</span></strong>
           </div>
         </div>
         <div class="order-body">${itemsHtml}</div>
@@ -458,5 +458,52 @@
     // ---------- INIT ----------
     if (adminPassword) showAdmin();
   </script>
-</body>
+    <script>
+      function recalculateTotal(input) {
+        const orderId = input.getAttribute('data-order-id');
+        const orderCard = input.closest('.order-card');
+        const inputs = orderCard.querySelectorAll('.qty-input');
+        let newTotal = 0;
+        inputs.forEach(inp => {
+          const price = parseFloat(inp.getAttribute('data-price'));
+          const qty = parseInt(inp.value) || 0;
+          newTotal += (price * qty);
+        });
+        const totalDisplay = orderCard.querySelector('.order-total-display span');
+        if (totalDisplay) {
+          totalDisplay.textContent = newTotal.toFixed(2);
+        }
+      }
+    </script>
+      <script>
+      document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('qty-input')) {
+          const orderCard = e.target.closest('.order-card');
+          if (!orderCard) return;
+          
+          const inputs = orderCard.querySelectorAll('.qty-input');
+          let newTotal = 0;
+          
+          inputs.forEach(inp => {
+            const row = inp.closest('.order-item-row');
+            if (row) {
+              // السعر هو النص الموجود في ثاني span داخل السطر
+              const spans = row.querySelectorAll('span');
+              if (spans.length > 1) {
+                const priceText = spans[1].textContent.trim();
+                const price = parseFloat(priceText) || 0;
+                const qty = parseInt(inp.value) || 0;
+                newTotal += (price * qty);
+              }
+            }
+          });
+          
+          const totalDisplay = orderCard.querySelector('.order-total-display span');
+          if (totalDisplay) {
+            totalDisplay.textContent = newTotal.toFixed(2);
+          }
+        }
+      });
+    </script>
+  </body>
 </html>
