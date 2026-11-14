@@ -59,9 +59,11 @@
     .order-info strong { color: var(--primary); font-size: 1rem; }
     
     .order-body { padding: 16px; }
+    
+    /* تعديل شبكة العرض لتشمل زر الحذف في البداية */
     .order-item-row {
       display: grid;
-      grid-template-columns: 1fr 100px 100px 100px 40px;
+      grid-template-columns: 40px 1fr 100px 100px 100px; /* 40px لزر الحذف، والباقي للأعمدة */
       gap: 10px;
       align-items: center;
       padding: 10px 0;
@@ -282,8 +284,8 @@
       o.items.forEach(it => {
         itemsHtml += `
           <div class="order-item-row" data-item-id="${it.id}" data-price="${it.price}">
+            ${isPending ? `<button class="btn-delete-item" style="background:#fee2e2; color:#dc2626; border:none; border-radius:6px; padding:6px; cursor:pointer; font-weight:bold;">🗑️</button>` : ''}
             <span>${it.product_id ? `<strong>#${it.product_id}</strong> ` : ''}${it.name || 'منتج'}${it.offer_id ? ' (عرض)' : ''}</span>
-            <span><span>${Number(it.price).toFixed(2)}</span></span>
             <span class="item-subtotal" style="font-weight:bold; color:var(--primary);">${(it.quantity * it.price).toFixed(2)}</span>
             <span>
               ${isPending 
@@ -291,8 +293,7 @@
                 : `<strong>${it.quantity}</strong>`
               }
             </span>
-            <span style="color:var(--text-muted); font-size:0.8rem;">${it.product_id ? `متاح: ${it.stock ?? '?'}` : 'عرض'}</span>
-            ${isPending ? `<button class="btn-delete-item" style="background:#fee2e2; color:#dc2626; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; font-weight:bold;">🗑️</button>` : ''}
+            <span><span>${Number(it.price).toFixed(2)}</span></span>
           </div>
         `;
       });
