@@ -1,4 +1,4 @@
-﻿export async function onRequest(context) {
+﻿﻿export async function onRequest(context) {
   const { env, request } = context;
   const method = request.method;
 
@@ -18,7 +18,6 @@
     if (method === 'GET') {
       const status = new URL(request.url).searchParams.get('status') || 'pending';
 
-      // إجبار المتصفح على قراءة التاريخ كـ UTC
       const rawOrders = await env.DB.prepare(
         'SELECT * FROM orders WHERE status = ? ORDER BY created_at DESC'
       ).bind(status).all();
@@ -41,7 +40,7 @@
     // ---------- 3) POST: إجراء على طلب ----------
     if (method === 'POST') {
       const body = await request.json();
-      const { action, order_id, items } = body;
+      const { action, order_id, items, deleted_item_ids } = body;
 
       if (!order_id) return jsonError('order_id مطلوب', 400);
 
@@ -53,18 +52,28 @@
         if (!orderRow) return jsonError('الطلب غير موجود', 404);
         if (orderRow.status !== 'pending') return jsonError('الطلب ليس معلقاً', 400);
 
-        // إما الكميات المعدلة أو الأصلية
         const orderItems = await env.DB.prepare(
           'SELECT * FROM order_items WHERE order_id = ?'
         ).bind(order_id).all();
 
         const itemsToUse = items || orderItems.results;
 
-        // التحقق من المخزون وخصمه (مع دعم العروض)
         const stmts = [];
+
+        // أ) حذف الأصناف التي اختار المدير حذفها
+        if (deleted_item_ids && deleted_item_ids.length > 0) {
+          for (const itemId of deleted_item_ids) {
+            stmts.push(env.DB.prepare('DELETE FROM order_items WHERE id = ? AND order_id = ?')
+              .bind(itemId, order_id));
+          }
+        }
+
+        // ب) معالجة الكميات المتبقية وخصم المخزون
         for (const it of itemsToUse) {
+          // تجاهل الأصناف المحذوفة من الحساب
+          if (deleted_item_ids && it.id && deleted_item_ids.includes(it.id)) continue;
+
           if (it.offer_id) {
-            // إذا كان عرضاً، نجلب منتجاته ونخصم مخزونها
             const offerItems = await env.DB.prepare(
               'SELECT product_id, quantity FROM offer_items WHERE offer_id = ?'
             ).bind(it.offer_id).all();
@@ -74,24 +83,20 @@
                 .bind(oi.product_id).first();
               if (!p) return jsonError(`منتج في العرض (${oi.product_id}) غير موجود`, 400);
               
-              // حساب الكمية المطلوبة: كمية العرض × كمية المنتج داخل العرض
               const requiredQty = oi.quantity * it.quantity;
               
               if (p.stock < requiredQty) {
                 return jsonError(`المخزون غير كافٍ للمنتج "${p.name}" (المطلوب: ${requiredQty}, المتاح: ${p.stock})`, 400);
               }
               
-              // خصم المخزون
               stmts.push(env.DB.prepare('UPDATE products SET stock = stock - ? WHERE id = ?')
                 .bind(requiredQty, oi.product_id));
             }
             
-            // تحديث كمية العرض في الطلب
             stmts.push(env.DB.prepare('UPDATE order_items SET quantity = ? WHERE order_id = ? AND offer_id = ?')
               .bind(it.quantity, order_id, it.offer_id));
               
           } else {
-            // منتج عادي
             const p = await env.DB.prepare('SELECT stock, name FROM products WHERE id = ?')
               .bind(it.product_id).first();
             if (!p) return jsonError(`المنتج ${it.product_id} غير موجود`, 400);
@@ -99,7 +104,6 @@
               return jsonError(`المخزون غير كافٍ للمنتج "${p.name}" (المطلوب: ${it.quantity}, المتاح: ${p.stock})`, 400);
             }
             
-            // خصم المخزون
             stmts.push(env.DB.prepare('UPDATE products SET stock = stock - ? WHERE id = ?')
               .bind(it.quantity, it.product_id));
             stmts.push(env.DB.prepare('UPDATE order_items SET quantity = ? WHERE order_id = ? AND product_id = ?')
@@ -111,6 +115,17 @@
           .bind(order_id));
 
         await env.DB.batch(stmts);
+
+        // ج) إعادة حساب الإجمالي للطلب بعد الحذف والتعديلات
+        const remainingItems = await env.DB.prepare(
+          'SELECT SUM(quantity * price) as new_total FROM order_items WHERE order_id = ?'
+        ).bind(order_id).first();
+        
+        const finalTotal = (remainingItems && remainingItems.new_total) ? remainingItems.new_total : 0;
+        
+        await env.DB.prepare('UPDATE orders SET total = ? WHERE id = ?')
+          .bind(finalTotal, order_id).run();
+
         return jsonOk({ message: 'تمت الموافقة وخصم المخزون' });
       }
 

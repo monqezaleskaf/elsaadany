@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -61,7 +61,7 @@
     .order-body { padding: 16px; }
     .order-item-row {
       display: grid;
-      grid-template-columns: 1fr 100px 100px 100px;
+      grid-template-columns: 1fr 100px 100px 100px 40px;
       gap: 10px;
       align-items: center;
       padding: 10px 0;
@@ -204,7 +204,6 @@
       const errEl = $('#loginError');
       errEl.style.display = 'none';
 
-      // اختبار الاتصال
       try {
         const res = await fetch('/api/admin?status=pending', {
           headers: { 'X-Admin-Password': pass }
@@ -282,9 +281,10 @@
       let itemsHtml = '';
       o.items.forEach(it => {
         itemsHtml += `
-          <div class="order-item-row">
+          <div class="order-item-row" data-item-id="${it.id}" data-price="${it.price}">
             <span>${it.product_id ? `<strong>#${it.product_id}</strong> ` : ''}${it.name || 'منتج'}${it.offer_id ? ' (عرض)' : ''}</span>
-            <span><span>${Number(it.price).toFixed(2)}</span></span><span class="item-subtotal" style="font-weight:bold; color:var(--primary);">${(it.quantity * it.price).toFixed(2)}</span>
+            <span><span>${Number(it.price).toFixed(2)}</span></span>
+            <span class="item-subtotal" style="font-weight:bold; color:var(--primary);">${(it.quantity * it.price).toFixed(2)}</span>
             <span>
               ${isPending 
                 ? `<input type="number" class="qty-input" data-pid="${it.product_id || ''}" data-oid="${it.offer_id || ''}" min="1" max="${it.stock || 999}" value="${it.quantity}">`
@@ -292,6 +292,7 @@
               }
             </span>
             <span style="color:var(--text-muted); font-size:0.8rem;">${it.product_id ? `متاح: ${it.stock ?? '?'}` : 'عرض'}</span>
+            ${isPending ? `<button class="btn-delete-item" style="background:#fee2e2; color:#dc2626; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; font-weight:bold;">🗑️</button>` : ''}
           </div>
         `;
       });
@@ -322,9 +323,42 @@
       if (isPending) {
         card.querySelector('.btn-approve').onclick = () => approveOrder(o, card);
         card.querySelector('.btn-reject').onclick = () => rejectOrder(o);
+        
+        // تفعيل أزرار الحذف
+        card.querySelectorAll('.btn-delete-item').forEach(btn => {
+          btn.onclick = (e) => {
+            const row = e.target.closest('.order-item-row');
+            row.remove(); // حذف السطر من الشاشة
+            recalcCardTotal(card); // إعادة حساب الإجمالي
+          };
+        });
+
+        // الاستماع لتغيرات الكمية لتحديث الإجمالي تلقائياً
+        card.querySelectorAll('.qty-input').forEach(input => {
+          input.addEventListener('input', () => recalcCardTotal(card));
+        });
       }
 
       return card;
+    }
+
+    // دالة إعادة حساب الإجمالي للبطاقة
+    function recalcCardTotal(card) {
+      let newTotal = 0;
+      card.querySelectorAll('.order-item-row').forEach(row => {
+        const price = parseFloat(row.dataset.price) || 0;
+        const qtyInput = row.querySelector('.qty-input');
+        const qty = qtyInput ? (parseInt(qtyInput.value) || 0) : 0;
+        const rowTotal = price * qty;
+        newTotal += rowTotal;
+        
+        // تحديث الإجمالي الفرعي
+        const subTotalEl = row.querySelector('.item-subtotal');
+        if (subTotalEl) subTotalEl.textContent = rowTotal.toFixed(2);
+      });
+      
+      const totalDisplay = card.querySelector('.order-total-display span');
+      if (totalDisplay) totalDisplay.textContent = newTotal.toFixed(2);
     }
 
     // ---------- APPROVE ----------
@@ -335,19 +369,16 @@
         const offerId = inp.dataset.oid;
         
         if (offerId && offerId !== 'null' && offerId !== '') {
-          // عرض
-          return {
-            offer_id: parseInt(offerId),
-            quantity: parseInt(inp.value)
-          };
+          return { offer_id: parseInt(offerId), quantity: parseInt(inp.value) };
         } else {
-          // منتج عادي
-          return {
-            product_id: parseInt(productId),
-            quantity: parseInt(inp.value)
-          };
+          return { product_id: parseInt(productId), quantity: parseInt(inp.value) };
         }
       });
+
+      // جمع الأصناف المحذوفة
+      const currentItemIds = Array.from(card.querySelectorAll('.order-item-row')).map(r => parseInt(r.dataset.itemId));
+      const originalItemIds = o.items.map(it => it.id);
+      const deletedIds = originalItemIds.filter(id => !currentItemIds.includes(id));
 
       if (!confirm(`هل أنت متأكد من الموافقة على الطلب #${o.id}؟\nسيتم خصم الكميات من المخزون.`)) return;
 
@@ -358,7 +389,7 @@
             'Content-Type': 'application/json',
             'X-Admin-Password': adminPassword
           },
-          body: JSON.stringify({ action: 'approve', order_id: o.id, items })
+          body: JSON.stringify({ action: 'approve', order_id: o.id, items, deleted_item_ids: deletedIds })
         });
         const data = await res.json();
         if (!data.ok) throw new Error(data.error);
@@ -389,7 +420,6 @@
         alert('❌ ' + e.message);
       }
     }
-
 
     // ---------- رفع CSV ----------
     const uploadCsvBtn = document.getElementById('uploadCsvBtn');
@@ -429,13 +459,13 @@
           msg += `🔄 تم تحديث منتجات موجودة: ${data.updated}`;
 
           alert(msg);
-          loadOrders(); // تحديث الطلبات (لأن المخزون تغيّر)
+          loadOrders();
         } catch (err) {
           alert('❌ خطأ: ' + err.message);
         } finally {
           uploadCsvBtn.disabled = false;
           uploadCsvBtn.textContent = '📤 رفع الملف';
-          csvFileInput.value = ''; // لتمكين رفع نفس الملف مرة أخرى
+          csvFileInput.value = '';
         }
       };
     }
@@ -458,42 +488,5 @@
     // ---------- INIT ----------
     if (adminPassword) showAdmin();
   </script>
-    
-      <script>
-      document.addEventListener('input', function(e) {
-        if (e.target.classList.contains('qty-input')) {
-          const orderCard = e.target.closest('.order-card');
-          if (!orderCard) return;
-          
-          const inputs = orderCard.querySelectorAll('.qty-input');
-          let newTotal = 0;
-          
-          inputs.forEach(inp => {
-            const row = inp.closest('.order-item-row');
-            if (row) {
-              // السعر هو النص الموجود في ثاني span داخل السطر
-              const spans = row.querySelectorAll('span');
-              if (spans.length > 1) {
-                const priceText = spans[1].textContent.trim();
-                const price = parseFloat(priceText) || 0;
-                const qty = parseInt(inp.value) || 0;
-                const rowTotal = price * qty;
-                newTotal += rowTotal;
-                
-                const subTotalEl = row.querySelector('.item-subtotal');
-                if (subTotalEl) {
-                  subTotalEl.textContent = rowTotal.toFixed(2);
-                }
-              }
-            }
-          });
-          
-          const totalDisplay = orderCard.querySelector('.order-total-display span');
-          if (totalDisplay) {
-            totalDisplay.textContent = newTotal.toFixed(2);
-          }
-        }
-      });
-    </script>
-  </body>
+</body>
 </html>
