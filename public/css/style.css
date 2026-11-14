@@ -2665,3 +2665,13 @@ body {
     unicode-bidi: embed !important;
     display: inline-block !important;
 }
+
+/* ============================================================
+   💱 تنسيق العملة (ج.م) لمنع انكسار النص
+   ============================================================ */
+.price-currency {
+    display: inline-block !important;
+    white-space: nowrap !important; /* منع النزول لسطر جديد */
+    font-weight: 700 !important;
+    color: inherit !important;
+}

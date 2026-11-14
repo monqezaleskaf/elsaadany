@@ -213,13 +213,13 @@
               <ul style="font-size:0.8rem; color:var(--text-muted); margin: 4px 0; padding-right: 15px;">
                 ${itemsList}
               </ul>
-              <div class="cart-item-price"> ${item.price.toFixed(2)}</div>
+              <div class="cart-item-price">${item.price.toFixed(2)} <span class="price-currency">ج.م</span></div>
               <div class="cart-item-controls">
                 <button class="qty-btn" data-act="minus">−</button>
                 <span style="min-width:30px; text-align:center; font-weight:700;">${item.quantity}</span>
                 <button class="qty-btn" data-act="plus">+</button>
                 <span style="color:var(--text-muted); font-size:0.8rem; margin-right:auto;">
-                  ${item.original_total ? `الأصلي:  ${item.original_total.toFixed(2)}` : ''}
+                  ${item.original_total ? `الأصلي: ${item.original_total.toFixed(2)} <span class="price-currency">ج.م</span>` : ''}
                 </span>
               </div>
             </div>
@@ -233,7 +233,7 @@
             </div>
             <div class="cart-item-info">
               <div class="cart-item-name">${escapeHtml(item.name)}</div>
-              <div class="cart-item-price"> ${item.price.toFixed(2)}</div>
+              <div class="cart-item-price">${item.price.toFixed(2)} <span class="price-currency">ج.م</span></div>
               <div class="cart-item-controls">
                 <button class="qty-btn" data-act="minus">−</button>
                 <span style="min-width:30px; text-align:center; font-weight:700;">${item.quantity}</span>
@@ -271,7 +271,7 @@
       });
 
       summaryCount.textContent = count;
-      summaryTotal.textContent = ` ${total.toFixed(2)}`;
+      summaryTotal.textContent = `${total.toFixed(2)} ج.م`;
     }
 
     function escapeHtml(s) {
@@ -358,7 +358,7 @@
         });
 
         waMessage += `--------------------\n`;
-        waMessage += ` *الإجمالي:*  ${total.toFixed(2)}\n`;
+        waMessage += ` *الإجمالي:* ${total.toFixed(2)} ج.م\n`;
         waMessage += ` *رابط الفاتورة:* ${location.origin}/invoice.html?id=${data.order_id}\n`;
         waMessage += ` *رقم الطلب:* #${data.order_id}`;
 
