@@ -1,5 +1,5 @@
 const GITHUB_OWNER = "monqezaleskaf";
-const GITHUB_REPO = "monqezaleskaf";
+const GITHUB_REPO = "elsaadany";
 const GITHUB_BRANCH = "main";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const STORE_LOGO_KEY = "Logo.png";

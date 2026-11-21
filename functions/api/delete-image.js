@@ -1,5 +1,5 @@
 const GITHUB_OWNER = "monqezaleskaf";
-const GITHUB_REPO = "monqezaleskaf";
+const GITHUB_REPO = "elsaadany";
 const GITHUB_BRANCH = "main";
 const STORE_LOGO_KEY = "Logo.png";
 
