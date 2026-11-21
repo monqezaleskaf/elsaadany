@@ -283,7 +283,7 @@ html, body {
 }
 
 .palette-info {
-  padding: 7px;
+  padding: 8px;
   text-align: center;
 }
 
@@ -292,15 +292,50 @@ html, body {
   font-size: .78rem;
   font-weight: 700;
   color: #000000;
-  margin-bottom: 3px;
+  margin-bottom: 6px;
 }
 
-.palette-value {
-  display: block;
+.palette-manual-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.palette-picker {
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.palette-hex-input {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 7px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
   direction: ltr;
-  font-size: .75rem;
+  text-align: center;
+  font-size: .76rem;
+  font-weight: 600;
   color: #000000;
-  overflow-wrap: anywhere;
+}
+
+.palette-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.palette-actions-row .btn {
+  flex: 1;
+  min-width: 200px;
 }
 
 .palette-empty {
@@ -393,7 +428,8 @@ html, body {
   #changeAdminPasswordBtn,
   #checkCleanupBtn,
   #confirmCleanupBtn,
-  #cancelCleanupBtn {
+  #cancelCleanupBtn,
+  #saveManualPaletteBtn {
     width: 100%;
   }
 
@@ -519,16 +555,15 @@ html, body {
       </button>
     </div>
 
-    <!-- لوحة الألوان المستخرجة من الشعار -->
+    <!-- لوحة الألوان المستخرجة من الشعار + التعديل اليدوي -->
     <div class="palette-wrap">
       <h3 class="palette-heading">🎨 هوية المتجر اللونية</h3>
       <p class="help-text">
-        يستخرج النظام لونين أساسيين واضحين من الشعار عند رفعه ويحفظهما تلقائياً.
-        لن تُطبّق الألوان على المتجر إلا بعد الضغط على زر التطبيق.
+        يستخرج النظام لونين أساسيين واضحين من الشعار عند رفعه، ويمكنك أيضاً اختيار أو تعديل أي لون يدوياً في أي وقت دون الاستغناء عن استيراد الألوان من الشعار.
       </p>
 
       <div id="paletteEmpty" class="palette-empty">
-        لم يتم استخراج لوحة ألوان بعد. ارفع شعار المتجر لإنشائها.
+        لم يتم استخراج لوحة ألوان بعد. ارفع شعار المتجر لإنشائها أو عدّل الألوان يدوياً واحفظها.
       </div>
 
       <div id="paletteGrid" class="palette-grid hidden"></div>
@@ -538,9 +573,15 @@ html, body {
           ألوان الشعار غير مطبقة حالياً.
         </div>
 
-        <button class="btn btn-primary" id="applyBrandPaletteBtn" disabled>
-          🎨 تطبيق ألوان الشعار على المتجر بالكامل
-        </button>
+        <div class="palette-actions-row">
+          <button class="btn btn-success" id="saveManualPaletteBtn">
+            💾 حفظ الألوان اليدوية
+          </button>
+
+          <button class="btn btn-primary" id="applyBrandPaletteBtn" disabled>
+            🎨 تطبيق ألوان الشعار على المتجر بالكامل
+          </button>
+        </div>
 
         <p class="help-text">
           يمكنك العودة إلى الهوية الافتراضية بالأبيض والأسود عند حذف الشعار.
@@ -862,6 +903,23 @@ const PALETTE_LABELS = {
   text: "النصوص"
 };
 
+const DEFAULT_MANUAL_PALETTE = {
+  primary: "#0A2472",
+  secondary: "#1E40AF",
+  accent: "#3B82F6",
+  background: "#FFFFFF",
+  surface: "#F8FAFC",
+  text: "#000000"
+};
+
+function normalizeHexColor(raw) {
+  let val = String(raw || "").trim();
+  if (!val) return null;
+  if (!val.startsWith("#")) val = "#" + val;
+  if (!/^#[0-9A-Fa-f]{6}$/.test(val)) return null;
+  return val.toUpperCase();
+}
+
 function hexToRgb(hex) {
   const value = String(hex || "").replace("#", "");
 
@@ -953,11 +1011,11 @@ function updatePaletteControls() {
   status.classList.toggle("inactive", !brandPaletteActive);
 
   if (brandPaletteActive) {
-    status.textContent = "✓ ألوان الشعار مطبقة حالياً على المتجر.";
-  } else if (!currentLogoUrl) {
-    status.textContent = "ألوان الشعار غير مطبقة: لا يوجد شعار مرفوع حالياً.";
+    status.textContent = "✓ ألوان الهوية مطبقة حالياً على المتجر.";
   } else if (!hasPalette) {
-    status.textContent = "ألوان الشعار غير مطبقة: لا توجد لوحة ألوان صالحة.";
+    status.textContent = "ألوان الهوية غير مطبقة: لا توجد لوحة ألوان صالحة.";
+  } else if (!currentLogoUrl) {
+    status.textContent = "لوحة الألوان محفوظة، لكنها غير مطبقة حالياً (يمكنك حفظها يدوياً أو رفع شعار لتطبيق ألوان الشعار).";
   } else {
     status.textContent = "ألوان الشعار محفوظة وجاهزة للتطبيق، لكنها غير مطبقة حالياً.";
   }
@@ -973,34 +1031,24 @@ function renderBrandPalette(palette) {
   const empty = $("#paletteEmpty");
 
   grid.innerHTML = "";
-  currentBrandPalette = null;
 
-  if (!palette || typeof palette !== "object") {
-    grid.classList.add("hidden");
-    empty.classList.remove("hidden");
-    empty.textContent = "لم يتم استخراج لوحة ألوان بعد. ارفع شعار المتجر لإنشائها.";
-    updatePaletteControls();
-    return;
-  }
+  const source = (palette && typeof palette === "object")
+    ? palette
+    : DEFAULT_MANUAL_PALETTE;
 
-  const keys = Object.keys(PALETTE_LABELS);
-  const available = keys.filter(key =>
-    /^#[0-9A-F]{6}$/i.test(String(palette[key] || ""))
-  );
+  const built = {};
+  Object.keys(PALETTE_LABELS).forEach(key => {
+    built[key] = normalizeHexColor(source[key]) || DEFAULT_MANUAL_PALETTE[key];
+  });
 
-  if (!available.length) {
-    grid.classList.add("hidden");
-    empty.classList.remove("hidden");
-    empty.textContent = "لا توجد لوحة ألوان صالحة محفوظة.";
-    updatePaletteControls();
-    return;
-  }
+  currentBrandPalette = { ...built };
 
-  available.forEach(key => {
-    const color = palette[key];
+  Object.keys(PALETTE_LABELS).forEach(key => {
+    const color = currentBrandPalette[key];
 
     const item = document.createElement("div");
     item.className = "palette-color";
+    item.dataset.colorKey = key;
 
     const swatch = document.createElement("div");
     swatch.className = "palette-swatch";
@@ -1013,19 +1061,55 @@ function renderBrandPalette(palette) {
     name.className = "palette-name";
     name.textContent = PALETTE_LABELS[key];
 
-    const value = document.createElement("span");
-    value.className = "palette-value";
-    value.textContent = color.toUpperCase();
+    const controls = document.createElement("div");
+    controls.className = "palette-manual-controls";
+
+    const picker = document.createElement("input");
+    picker.type = "color";
+    picker.className = "palette-picker";
+    picker.value = color;
+    picker.setAttribute("aria-label", `اختيار ${PALETTE_LABELS[key]}`);
+
+    const hexInput = document.createElement("input");
+    hexInput.type = "text";
+    hexInput.className = "palette-hex-input";
+    hexInput.value = color;
+    hexInput.maxLength = 7;
+
+    const syncColorValue = (rawValue) => {
+      const normalized = normalizeHexColor(rawValue);
+      if (!normalized) return;
+
+      currentBrandPalette[key] = normalized;
+      swatch.style.backgroundColor = normalized;
+      picker.value = normalized;
+      hexInput.value = normalized;
+    };
+
+    picker.addEventListener("input", event => {
+      syncColorValue(event.target.value);
+    });
+
+    hexInput.addEventListener("change", event => {
+      const normalized = normalizeHexColor(event.target.value);
+      if (normalized) {
+        syncColorValue(normalized);
+      } else {
+        hexInput.value = currentBrandPalette[key];
+        toast("أدخل كود لون سداسي عشري صحيحاً مثل #0A2472", "error");
+      }
+    });
+
+    controls.appendChild(picker);
+    controls.appendChild(hexInput);
 
     info.appendChild(name);
-    info.appendChild(value);
+    info.appendChild(controls);
 
     item.appendChild(swatch);
     item.appendChild(info);
     grid.appendChild(item);
   });
-
-  currentBrandPalette = { ...palette };
 
   empty.classList.add("hidden");
   grid.classList.remove("hidden");
@@ -1137,7 +1221,6 @@ async function extractBrandPalette(file) {
 
         const saturation = colorSaturation(color);
         const lum = colorLuminance(color);
-        // تفضيل الألوان الغنية والواضحة وتجنب الألوان الباهتة جداً أو المائلة للرمادي الفاتح
         const clarityFactor = saturation > 0.25 && lum < 0.72 ? 2.2 : 0.45;
 
         return {
@@ -1151,7 +1234,6 @@ async function extractBrandPalette(file) {
 
     const selected = [];
 
-    // اختيار لونين أساسيين واضحين ومتباعدين من الشعار
     for (const candidate of candidates) {
       if (
         selected.every(item =>
@@ -1245,6 +1327,34 @@ async function saveBrandPaletteActive(active) {
   await readResponse(response);
 }
 
+// ---------- Save Manual Palette ----------
+$("#saveManualPaletteBtn").onclick = async () => {
+  if (!isValidBrandPalette(currentBrandPalette)) {
+    return toast("تأكد من صحة جميع أكواد الألوان قبل الحفظ", "error");
+  }
+
+  const button = $("#saveManualPaletteBtn");
+  button.disabled = true;
+  button.textContent = "جارٍ حفظ الألوان...";
+
+  try {
+    const activeFlag = brandPaletteActive ? "1" : "1";
+    await saveBrandPalette(currentBrandPalette, activeFlag);
+    setBrandPaletteActive(true);
+
+    if (typeof loadStoreBrandPalette === "function") {
+      await loadStoreBrandPalette();
+    }
+
+    toast("تم حفظ وتطبيق الألوان اليدوية بنجاح");
+  } catch (error) {
+    toast("تعذر حفظ الألوان اليدوية: " + error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "💾 حفظ الألوان اليدوية";
+  }
+};
+
 // ---------- Logo preview ----------
 function showLogo(url) {
   const preview = $("#storeLogoPreview");
@@ -1299,7 +1409,7 @@ $("#applyBrandPaletteBtn").onclick = async () => {
   button.textContent = "جارٍ تطبيق الألوان...";
 
   try {
-    await saveBrandPaletteActive("1");
+    await saveBrandPalette(currentBrandPalette, "1");
 
     setBrandPaletteActive(true);
 
