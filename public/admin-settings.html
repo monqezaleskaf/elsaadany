@@ -674,6 +674,11 @@ html, body {
     </div>
 
     <div class="field">
+      <label>رابط صفحة الإنستغرام</label>
+      <input type="url" id="instagram_url" placeholder="https://www.instagram.com/your-account">
+    </div>
+
+    <div class="field">
       <label>رابط موقع الشركة على خرائط جوجل</label>
       <input type="url" id="google_maps_url">
     </div>
@@ -1956,6 +1961,7 @@ $("#saveSettingsBtn").onclick = async () => {
       whatsapp_number: $("#whatsapp_number").value.trim(),
       orders_whatsapp_number: $("#orders_whatsapp_number").value.trim(),
       facebook_url: $("#facebook_url").value.trim(),
+      instagram_url: $("#instagram_url").value.trim(),
       google_maps_url: $("#google_maps_url").value.trim()
     }
   };

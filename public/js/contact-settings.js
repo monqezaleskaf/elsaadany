@@ -12,6 +12,10 @@
     ? headerActions.querySelectorAll('a.facebook')
     : [];
 
+  const instagramLinks = headerActions
+    ? headerActions.querySelectorAll('a.instagram')
+    : [];
+
   const mapButton = document.getElementById('mapLinkBtn');
 
   function disableLink(link) {
@@ -51,6 +55,7 @@
   async function loadContactSettings() {
     whatsappLinks.forEach(disableLink);
     facebookLinks.forEach(disableLink);
+    instagramLinks.forEach(disableLink);
     disableLink(mapButton);
 
     try {
@@ -78,6 +83,7 @@
         : '';
 
       const facebookUrl = getSafeHttpsUrl(settings.facebook_url);
+      const instagramUrl = getSafeHttpsUrl(settings.instagram_url);
       const mapUrl = getSafeHttpsUrl(settings.google_maps_url);
 
       if (whatsappUrl) {
@@ -89,6 +95,12 @@
       if (facebookUrl) {
         facebookLinks.forEach(link => {
           enableLink(link, facebookUrl);
+        });
+      }
+
+      if (instagramUrl) {
+        instagramLinks.forEach(link => {
+          enableLink(link, instagramUrl);
         });
       }
 

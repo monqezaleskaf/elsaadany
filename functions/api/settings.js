@@ -7,6 +7,7 @@ const PUBLIC_ALLOWED_SETTINGS = [
   'whatsapp_number',
   'orders_whatsapp_number',
   'facebook_url',
+  'instagram_url',
   'google_maps_url',
   'store_address',
   'community_whatsapp_enabled',
@@ -190,7 +191,11 @@ export async function onRequest(context) {
           num = Math.min(0.40, Math.max(0.05, num));
           value = num.toFixed(2);
 
-        } else if (key === 'watermark_text' || key === 'watermark_image_url') {
+        } else if (
+          key === 'watermark_text' ||
+          key === 'watermark_image_url' ||
+          key === 'instagram_url'
+        ) {
           value = String(updates[key] ?? '').trim();
 
         } else if (key === 'store_currency') {
