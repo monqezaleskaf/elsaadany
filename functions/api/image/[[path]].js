@@ -1,7 +1,6 @@
 const GITHUB_OWNER = "monqezaleskaf";
-const GITHUB_REPO = "tsf";
+const GITHUB_REPO = "elsaadany";
 const GITHUB_BRANCH = "main";
-
 export async function onRequestGet({ params }) {
   try {
     const pathParts = params.path;
