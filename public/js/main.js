@@ -454,52 +454,10 @@ function renderProductModal(p) {
     img.src = `/api/image/products/${p.id}.webp`;
   }
 
-  // --- إضافة تكبير/تصغير الصورة بعجلة الماوس (آمن) ---
+// --- تكبير وتحريك الصورة يمين ويسار وفوق وتحت (كمبيوتر وموبايل) ---
   try {
     const imgWrap = document.querySelector('.pm-image-wrap');
     if (imgWrap && img) {
-      let scale = 1;
-      let panX = 0;
-      let panY = 0;
-      let isDragging = false;
-      let startX = 0;
-      let startY = 0;
-
-      const clampPan = () => {
-        if (scale <= 1) {
-          scale = 1;
-          panX = 0;
-          panY = 0;
-          return;
-        }
-        const wrapRect = imgWrap.getBoundingClientRect();
-        const imgRect = img.getBoundingClientRect();
-        const baseW = imgRect.width / scale;
-        const baseH = imgRect.height / scale;
-        const maxX = Math.max(0, (baseW * scale - wrapRect.width) / 2 + 20);
-        const maxY = Math.max(0, (baseH * scale - wrapRect.height) / 2 + 20);
-        panX = Math.max(-maxX, Math.min(maxX, panX));
-        panY = Math.max(-maxY, Math.min(maxY, panY));
-      };
-
-      const applyTransform = () => {
-        clampPan();
-        img.style.transform = `translate3d(${panX}px, ${panY}px, 0px) scale(${scale})`;
-        imgWrap.classList.toggle('is-zoomed', scale > 1);
-      };
-
-      const resetZoom = () => {
-        scale = 1;
-        panX = 0;
-        panY = 0;
-        isDragging = false;
-        imgWrap.classList.remove('is-dragging');
-        applyTransform();
-      };
-
-      resetZoom();
-
-      // إزالة المستمعات القديمة عبر استبدال العقدة لضمان عدم التكرار
       const freshWrap = imgWrap.cloneNode(true);
       imgWrap.parentNode.replaceChild(freshWrap, imgWrap);
       const freshImg = freshWrap.querySelector('img');
@@ -510,95 +468,164 @@ function renderProductModal(p) {
         freshImg.src = `/api/image/products/${p.id}.webp`;
       }
 
+      let scale = 1;
+      let panX = 0;
+      let panY = 0;
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let pinchStartDist = 0;
+      let pinchStartScale = 1;
+
+      const clampPan = () => {
+        if (!freshImg || scale <= 1) {
+          scale = 1;
+          panX = 0;
+          panY = 0;
+          return;
+        }
+        const wrapRect = freshWrap.getBoundingClientRect();
+        const baseW = freshImg.clientWidth || wrapRect.width;
+        const baseH = freshImg.clientHeight || wrapRect.height;
+        const maxX = Math.max(0, (baseW * scale - wrapRect.width) / 2);
+        const maxY = Math.max(0, (baseH * scale - wrapRect.height) / 2);
+        panX = Math.max(-maxX, Math.min(maxX, panX));
+        panY = Math.max(-maxY, Math.min(maxY, panY));
+      };
+
       const renderZoom = () => {
         if (!freshImg) return;
         clampPan();
-        freshImg.style.transform = `translate3d(${panX}px, ${panY}px, 0px) scale(${scale})`;
+        freshImg.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
         freshWrap.classList.toggle('is-zoomed', scale > 1);
       };
 
-      const resetFreshZoom = () => {
+      const resetZoom = () => {
         scale = 1;
         panX = 0;
         panY = 0;
         isDragging = false;
+        pinchStartDist = 0;
         freshWrap.classList.remove('is-dragging');
         renderZoom();
       };
 
-      resetFreshZoom();
+      resetZoom();
 
       freshWrap.addEventListener('wheel', (e) => {
         e.preventDefault();
         if (!freshImg) return;
 
         const prevScale = scale;
-        const step = 0.25;
         const nextScale = e.deltaY < 0
-          ? Math.min(3.5, +(prevScale + step).toFixed(2))
-          : Math.max(1, +(prevScale - step).toFixed(2));
+          ? Math.min(3.5, +(prevScale + 0.25).toFixed(2))
+          : Math.max(1, +(prevScale - 0.25).toFixed(2));
 
         if (nextScale === prevScale) return;
-
         if (nextScale <= 1) {
-          scale = 1;
-          panX = 0;
-          panY = 0;
-          renderZoom();
+          resetZoom();
           return;
         }
 
-        // حساب موقع المؤشر داخل الصورة لتثبيت النقطة تحت الماوس أثناء التكبير
-        const rect = freshImg.getBoundingClientRect();
-        const pointerX = e.clientX - rect.left;
-        const pointerY = e.clientY - rect.top;
-
-        // إحداثيات النقطة بالنسبة للصورة قبل التغيير
+        const wrapRect = freshWrap.getBoundingClientRect();
+        const imgCenterX = wrapRect.left + wrapRect.width / 2 + panX;
+        const imgCenterY = wrapRect.top + wrapRect.height / 2 + panY;
+        const dx = e.clientX - imgCenterX;
+        const dy = e.clientY - imgCenterY;
         const ratio = nextScale / prevScale;
-        panX = panX - pointerX * (ratio - 1);
-        panY = panY - pointerY * (ratio - 1);
-        scale = nextScale;
 
+        panX = panX - dx * (ratio - 1);
+        panY = panY - dy * (ratio - 1);
+        scale = nextScale;
         renderZoom();
       }, { passive: false });
 
-      freshWrap.addEventListener('pointerdown', (e) => {
-        if (scale <= 1) return;
+      freshWrap.addEventListener('mousedown', (e) => {
+        if (e.button !== 0 || scale <= 1) return;
+        e.preventDefault();
         isDragging = true;
         startX = e.clientX - panX;
         startY = e.clientY - panY;
         freshWrap.classList.add('is-dragging');
-        freshWrap.setPointerCapture(e.pointerId);
       });
 
-      freshWrap.addEventListener('pointermove', (e) => {
+      const onWindowMouseMove = (e) => {
         if (!isDragging || scale <= 1) return;
         panX = e.clientX - startX;
         panY = e.clientY - startY;
         renderZoom();
-      });
+      };
 
-      const stopDrag = (e) => {
+      const onWindowMouseUp = () => {
         if (!isDragging) return;
         isDragging = false;
         freshWrap.classList.remove('is-dragging');
-        if (e && freshWrap.hasPointerCapture && freshWrap.hasPointerCapture(e.pointerId)) {
-          freshWrap.releasePointerCapture(e.pointerId);
+      };
+
+      window.addEventListener('mousemove', onWindowMouseMove);
+      window.addEventListener('mouseup', onWindowMouseUp);
+
+      const getTouchDist = (t1, t2) => Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+      freshWrap.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          isDragging = false;
+          freshWrap.classList.remove('is-dragging');
+          pinchStartDist = getTouchDist(e.touches[0], e.touches[1]);
+          pinchStartScale = scale;
+        } else if (e.touches.length === 1 && scale > 1) {
+          isDragging = true;
+          startX = e.touches[0].clientX - panX;
+          startY = e.touches[0].clientY - panY;
+          freshWrap.classList.add('is-dragging');
+        }
+      }, { passive: false });
+
+      freshWrap.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && pinchStartDist > 0) {
+          e.preventDefault();
+          const dist = getTouchDist(e.touches[0], e.touches[1]);
+          scale = Math.max(1, Math.min(3.5, +(pinchStartScale * (dist / pinchStartDist)).toFixed(2)));
+          if (scale <= 1) {
+            panX = 0;
+            panY = 0;
+          }
+          renderZoom();
+        } else if (e.touches.length === 1 && isDragging && scale > 1) {
+          e.preventDefault();
+          panX = e.touches[0].clientX - startX;
+          panY = e.touches[0].clientY - startY;
+          renderZoom();
+        }
+      }, { passive: false });
+
+      const onTouchEnd = (e) => {
+        if (e.touches.length < 2) pinchStartDist = 0;
+        if (e.touches.length === 0) {
+          isDragging = false;
+          freshWrap.classList.remove('is-dragging');
         }
       };
 
-      freshWrap.addEventListener('pointerup', stopDrag);
-      freshWrap.addEventListener('pointercancel', stopDrag);
+      freshWrap.addEventListener('touchend', onTouchEnd);
+      freshWrap.addEventListener('touchcancel', onTouchEnd);
 
       freshWrap.addEventListener('dblclick', () => {
-        resetFreshZoom();
+        if (scale > 1) {
+          resetZoom();
+        } else {
+          scale = 2;
+          renderZoom();
+        }
       });
 
       const closeBtn = document.getElementById('closeProductModal');
       if (closeBtn) {
         const originalClose = closeBtn.onclick;
         closeBtn.onclick = (e) => {
-          resetFreshZoom();
+          resetZoom();
+          window.removeEventListener('mousemove', onWindowMouseMove);
+          window.removeEventListener('mouseup', onWindowMouseUp);
           if (originalClose) originalClose(e);
         };
       }
