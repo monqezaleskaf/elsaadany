@@ -457,30 +457,136 @@ function renderProductModal(p) {
   // --- إضافة تكبير/تصغير الصورة بعجلة الماوس (آمن) ---
   try {
     const imgWrap = document.querySelector('.pm-image-wrap');
-    if (imgWrap) {
+    if (imgWrap && img) {
       let scale = 1;
-      // إزالة الحدث القديم إن وجد
-      imgWrap.onwheel = null;
-      imgWrap.addEventListener('wheel', (e) => {
+      let panX = 0;
+      let panY = 0;
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+
+      const clampPan = () => {
+        if (scale <= 1) {
+          scale = 1;
+          panX = 0;
+          panY = 0;
+          return;
+        }
+        const wrapRect = imgWrap.getBoundingClientRect();
+        const imgRect = img.getBoundingClientRect();
+        const baseW = imgRect.width / scale;
+        const baseH = imgRect.height / scale;
+        const maxX = Math.max(0, (baseW * scale - wrapRect.width) / 2 + 20);
+        const maxY = Math.max(0, (baseH * scale - wrapRect.height) / 2 + 20);
+        panX = Math.max(-maxX, Math.min(maxX, panX));
+        panY = Math.max(-maxY, Math.min(maxY, panY));
+      };
+
+      const applyTransform = () => {
+        clampPan();
+        img.style.transform = `translate3d(${panX}px, ${panY}px, 0px) scale(${scale})`;
+        imgWrap.classList.toggle('is-zoomed', scale > 1);
+      };
+
+      const resetZoom = () => {
+        scale = 1;
+        panX = 0;
+        panY = 0;
+        isDragging = false;
+        imgWrap.classList.remove('is-dragging');
+        applyTransform();
+      };
+
+      resetZoom();
+
+      // إزالة المستمعات القديمة عبر استبدال العقدة لضمان عدم التكرار
+      const freshWrap = imgWrap.cloneNode(true);
+      imgWrap.parentNode.replaceChild(freshWrap, imgWrap);
+      const freshImg = freshWrap.querySelector('img');
+      if (freshImg) {
+        freshImg.onerror = () => {
+          freshImg.outerHTML = '<div class="product-placeholder">🛍️</div>';
+        };
+        freshImg.src = `/api/image/products/${p.id}.webp`;
+      }
+
+      const renderZoom = () => {
+        if (!freshImg) return;
+        clampPan();
+        freshImg.style.transform = `translate3d(${panX}px, ${panY}px, 0px) scale(${scale})`;
+        freshWrap.classList.toggle('is-zoomed', scale > 1);
+      };
+
+      const resetFreshZoom = () => {
+        scale = 1;
+        panX = 0;
+        panY = 0;
+        isDragging = false;
+        freshWrap.classList.remove('is-dragging');
+        renderZoom();
+      };
+
+      resetFreshZoom();
+
+      freshWrap.addEventListener('wheel', (e) => {
         e.preventDefault();
-        if (e.deltaY < 0) scale = Math.min(3, scale + 0.1);
-        else scale = Math.max(1, scale - 0.1);
-        img.style.transform = `scale(${scale})`;
-        img.style.transition = 'transform 0.1s ease';
+        const prevScale = scale;
+        scale = e.deltaY < 0 ? Math.min(3, +(scale + 0.2).toFixed(2)) : Math.max(1, +(scale - 0.2).toFixed(2));
+        if (scale === 1) {
+          panX = 0;
+          panY = 0;
+        } else if (prevScale > 1) {
+          const ratio = scale / prevScale;
+          panX *= ratio;
+          panY *= ratio;
+        }
+        renderZoom();
       }, { passive: false });
-      
-      // إعادة تعيين الحجم عند إغلاق النافذة
+
+      freshWrap.addEventListener('pointerdown', (e) => {
+        if (scale <= 1) return;
+        isDragging = true;
+        startX = e.clientX - panX;
+        startY = e.clientY - panY;
+        freshWrap.classList.add('is-dragging');
+        freshWrap.setPointerCapture(e.pointerId);
+      });
+
+      freshWrap.addEventListener('pointermove', (e) => {
+        if (!isDragging || scale <= 1) return;
+        panX = e.clientX - startX;
+        panY = e.clientY - startY;
+        renderZoom();
+      });
+
+      const stopDrag = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        freshWrap.classList.remove('is-dragging');
+        if (e && freshWrap.hasPointerCapture && freshWrap.hasPointerCapture(e.pointerId)) {
+          freshWrap.releasePointerCapture(e.pointerId);
+        }
+      };
+
+      freshWrap.addEventListener('pointerup', stopDrag);
+      freshWrap.addEventListener('pointercancel', stopDrag);
+
+      freshWrap.addEventListener('dblclick', () => {
+        resetFreshZoom();
+      });
+
       const closeBtn = document.getElementById('closeProductModal');
       if (closeBtn) {
         const originalClose = closeBtn.onclick;
         closeBtn.onclick = (e) => {
-          scale = 1;
-          img.style.transform = 'scale(1)';
+          resetFreshZoom();
           if (originalClose) originalClose(e);
         };
       }
     }
-  } catch(err) { console.log('خطأ في التكبير:', err); }
+  } catch (err) {
+    console.log('خطأ في تكبير وتحريك الصورة:', err);
+  }
 
   // شريط الكمية
   const slider = document.getElementById('pmQtySlider');
