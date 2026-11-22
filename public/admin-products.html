@@ -683,6 +683,17 @@
     });
   }
 
+  function getAdminProductImageSrc(product, bustCache = true) {
+    const rawUrl = String(product?.image_url || "").trim();
+    const baseSrc = rawUrl || (product?.id ? `/api/image/products/${Number(product.id)}.webp` : "");
+    if (!baseSrc) return "";
+    if (!bustCache) return baseSrc;
+
+    const stamp = product?.updated_at || product?.created_at || Date.now();
+    const sep = baseSrc.includes("?") ? "&" : "?";
+    return `${baseSrc}${sep}v=${encodeURIComponent(String(stamp))}`;
+  }
+
   // عرض المنتجات
   function renderList(products) {
     listEl.innerHTML = "";
@@ -700,11 +711,18 @@
 
       const isHidden = Number(product.is_hidden) === 1;
 
-      if (product.image_url) {
+      const imgSrc = getAdminProductImageSrc(product, true);
+      if (imgSrc) {
         const image = document.createElement("img");
         image.className = "product-admin-img";
         image.alt = product.name || "";
-        image.src = product.image_url;
+        image.src = imgSrc;
+        image.onerror = () => {
+          const fallback = document.createElement("div");
+          fallback.className = "product-admin-no-image";
+          fallback.textContent = "بدون صورة";
+          image.replaceWith(fallback);
+        };
         card.appendChild(image);
       } else {
         const noImage = document.createElement("div");
@@ -1092,13 +1110,20 @@
 
     $("#editProductDate").value = formatStoreDateInput(product.created_at);
 
+    const editPreviewSrc = getAdminProductImageSrc(product, true);
+
     setExistingImagePreview(
-      product.image_url || "",
+      editPreviewSrc,
       $("#editImagePreview"),
       $("#editImagePlaceholder")
     );
 
-    $("#deleteProductImage").style.display = product.image_url
+    $("#editImagePreview").onerror = () => {
+      setImagePreview(null, $("#editImagePreview"), $("#editImagePlaceholder"));
+      $("#deleteProductImage").style.display = "none";
+    };
+
+    $("#deleteProductImage").style.display = editPreviewSrc
       ? "inline-flex"
       : "none";
 
