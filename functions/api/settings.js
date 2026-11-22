@@ -1,8 +1,30 @@
-﻿
-// ============================================================
+﻿// ============================================================
 // settings.js
 // API لإدارة إعدادات المتجر وتغيير كلمة مرور المدير
 // ============================================================
+
+const PUBLIC_ALLOWED_SETTINGS = [
+  'whatsapp_number',
+  'orders_whatsapp_number',
+  'facebook_url',
+  'google_maps_url',
+  'store_address',
+  'community_whatsapp_enabled',
+  'community_whatsapp_url',
+  'community_whatsapp_tooltip',
+  'store_name_ar',
+  'store_name_en',
+  'store_logo_url',
+  'store_brand_palette',
+  'store_brand_palette_active',
+  'store_currency',
+  'store_timezone',
+  'watermark_enabled',
+  'watermark_type',
+  'watermark_text',
+  'watermark_image_url',
+  'watermark_opacity'
+];
 
 export async function onRequest(context) {
   const { env, request } = context;
@@ -37,29 +59,10 @@ export async function onRequest(context) {
         return jsonOk({ settings: out });
       }
 
-      // الإعدادات العامة المسموح بعرضها
-      const allowed = [
-        'whatsapp_number',
-        'orders_whatsapp_number',
-        'facebook_url',
-        'google_maps_url',
-        'store_address',
-        'community_whatsapp_enabled',
-        'community_whatsapp_url',
-        'community_whatsapp_tooltip',
-        'store_name_ar',
-        'store_name_en',
-        'store_logo_url',
-        'store_brand_palette',
-        'store_brand_palette_active',
-        'store_currency',
-        'store_timezone'
-      ];
-
-      const placeholders = allowed.map(() => '?').join(',');
+      const placeholders = PUBLIC_ALLOWED_SETTINGS.map(() => '?').join(',');
       const rows = await env.DB.prepare(
         `SELECT key, value FROM settings WHERE key IN (${placeholders})`
-      ).bind(...allowed).all();
+      ).bind(...PUBLIC_ALLOWED_SETTINGS).all();
 
       const out = {};
       rows.results.forEach(r => {
@@ -100,29 +103,10 @@ export async function onRequest(context) {
 
       // ---------- حفظ إعدادات المتجر العادية ----------
       const updates = body.settings || {};
-
-      const allowed = [
-        'whatsapp_number',
-        'orders_whatsapp_number',
-        'facebook_url',
-        'google_maps_url',
-        'store_address',
-        'community_whatsapp_enabled',
-        'community_whatsapp_url',
-        'community_whatsapp_tooltip',
-        'store_name_ar',
-        'store_name_en',
-        'store_logo_url',
-        'store_brand_palette',
-        'store_brand_palette_active',
-        'store_currency',
-        'store_timezone'
-      ];
-
       const stmts = [];
 
       for (const key of Object.keys(updates)) {
-        if (!allowed.includes(key)) continue;
+        if (!PUBLIC_ALLOWED_SETTINGS.includes(key)) continue;
 
         let value;
 
@@ -189,6 +173,25 @@ export async function onRequest(context) {
               'قيمة تفعيل ألوان الشعار يجب أن تكون 1 أو 0'
             );
           }
+
+        } else if (key === 'watermark_enabled') {
+          value = String(updates[key]) === '1' ? '1' : '0';
+
+        } else if (key === 'watermark_type') {
+          const t = String(updates[key] ?? 'text').trim();
+          if (!['text', 'logo', 'image'].includes(t)) {
+            return jsonError('نوع العلامة المائية غير صالح');
+          }
+          value = t;
+
+        } else if (key === 'watermark_opacity') {
+          let num = parseFloat(updates[key]);
+          if (Number.isNaN(num)) num = 0.10;
+          num = Math.min(0.40, Math.max(0.05, num));
+          value = num.toFixed(2);
+
+        } else if (key === 'watermark_text' || key === 'watermark_image_url') {
+          value = String(updates[key] ?? '').trim();
 
         } else if (key === 'store_currency') {
           value = String(updates[key] ?? '').trim();

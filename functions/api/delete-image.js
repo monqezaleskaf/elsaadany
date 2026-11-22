@@ -1,7 +1,8 @@
 const GITHUB_OWNER = "monqezaleskaf";
-const GITHUB_REPO = "elsaadany";
+const GITHUB_REPO = "tsf";
 const GITHUB_BRANCH = "main";
 const STORE_LOGO_KEY = "Logo.png";
+const WATERMARK_IMAGE_KEY = "Watermark.png";
 
 export async function onRequestPost({ request, env }) {
   try {
@@ -57,6 +58,9 @@ export async function onRequestPost({ request, env }) {
 
     if (type === "logo") {
       key = STORE_LOGO_KEY;
+
+    } else if (type === "watermark") {
+      key = WATERMARK_IMAGE_KEY;
 
     } else if (type === "product") {
       productId = String(
@@ -188,6 +192,12 @@ export async function onRequestPost({ request, env }) {
     }
 
     // 7. حذف الملف من GitHub
+    const deleteMessage = type === "logo"
+      ? "Delete store logo"
+      : type === "watermark"
+        ? "Delete watermark image"
+        : "Delete product image";
+
     const deleteResponse = await fetch(githubUrl, {
       method: "DELETE",
       headers: {
@@ -195,9 +205,7 @@ export async function onRequestPost({ request, env }) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        message: type === "logo"
-          ? "Delete store logo"
-          : "Delete product image",
+        message: deleteMessage,
         sha: fileData.sha,
         branch: GITHUB_BRANCH
       })
@@ -223,6 +231,11 @@ export async function onRequestPost({ request, env }) {
           "DELETE FROM settings WHERE key = ?"
         ).bind("store_brand_palette")
       ]);
+
+    } else if (type === "watermark") {
+      await env.DB.prepare(
+        "DELETE FROM settings WHERE key = ?"
+      ).bind("watermark_image_url").run();
 
     } else {
       await env.DB.prepare(

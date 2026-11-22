@@ -1,8 +1,9 @@
 const GITHUB_OWNER = "monqezaleskaf";
-const GITHUB_REPO = "elsaadany";
+const GITHUB_REPO = "tsf";
 const GITHUB_BRANCH = "main";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const STORE_LOGO_KEY = "Logo.png";
+const WATERMARK_IMAGE_KEY = "Watermark.png";
 
 export async function onRequestPost({ request, env }) {
   try {
@@ -81,6 +82,10 @@ export async function onRequestPost({ request, env }) {
       key = STORE_LOGO_KEY;
       expectedMime = "image/png";
 
+    } else if (type === "watermark") {
+      key = WATERMARK_IMAGE_KEY;
+      expectedMime = "image/png";
+
     } else if (type === "product") {
       productId = String(
         formData.get("id") ||
@@ -119,7 +124,9 @@ export async function onRequestPost({ request, env }) {
         success: false,
         error: type === "logo"
           ? "يجب أن يكون الشعار بصيغة PNG"
-          : "يجب أن تكون صورة المنتج بصيغة WebP"
+          : type === "watermark"
+            ? "يجب أن تكون صورة العلامة المائية بصيغة PNG"
+            : "يجب أن تكون صورة المنتج بصيغة WebP"
       }, 400);
     }
 
@@ -127,7 +134,7 @@ export async function onRequestPost({ request, env }) {
     const fileBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(fileBuffer);
 
-    if (type === "logo") {
+    if (type === "logo" || type === "watermark") {
       const pngSignature = [
         0x89, 0x50, 0x4E, 0x47,
         0x0D, 0x0A, 0x1A, 0x0A
@@ -226,10 +233,14 @@ export async function onRequestPost({ request, env }) {
     }
 
     // 12. رفع الصورة أو استبدالها في المستودع
+    const commitMessage = type === "logo"
+      ? "Update store logo in Logo.png"
+      : type === "watermark"
+        ? "Update watermark image in Watermark.png"
+        : "Upload or update product image";
+
     const uploadPayload = {
-      message: type === "logo"
-        ? "Update store logo in Logo.png"
-        : "Upload or update product image",
+      message: commitMessage,
       content: base64Content,
       branch: GITHUB_BRANCH
     };
@@ -267,12 +278,12 @@ export async function onRequestPost({ request, env }) {
       }, 502);
     }
 
-    // 13. بناء رابط عرض الصورة المباشر بدون زوائد للشعار
-    const imageUrl = type === "logo"
+    // 13. بناء رابط عرض الصورة المباشر
+    const imageUrl = (type === "logo" || type === "watermark")
       ? `/api/image/${encodedPath}`
       : `/api/image/${encodedPath}?v=${encodeURIComponent(commitSha)}`;
 
-    // 14. حفظ رابط الشعار في إعدادات قاعدة البيانات
+    // 14. حفظ الرابط في إعدادات قاعدة البيانات
     if (type === "logo") {
       await env.DB.prepare(`
         INSERT INTO settings (key, value)
@@ -280,6 +291,14 @@ export async function onRequestPost({ request, env }) {
         ON CONFLICT(key)
         DO UPDATE SET value = excluded.value
       `).bind("store_logo_url", imageUrl).run();
+
+    } else if (type === "watermark") {
+      await env.DB.prepare(`
+        INSERT INTO settings (key, value)
+        VALUES (?, ?)
+        ON CONFLICT(key)
+        DO UPDATE SET value = excluded.value
+      `).bind("watermark_image_url", imageUrl).run();
     }
 
     // 15. إرجاع نتيجة العملية

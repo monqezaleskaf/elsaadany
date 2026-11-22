@@ -712,6 +712,76 @@ html, body {
     </button>
   </div>
 
+  <!-- العلامة المائية -->
+  <div class="card">
+    <h2>💧 العلامة المائية</h2>
+
+    <div class="field">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="watermark_enabled" style="width:auto;">
+        إظهار العلامة المائية على الصفحات الرئيسية الثلاثة
+      </label>
+    </div>
+
+    <div class="field">
+      <label for="watermark_type">نوع العلامة المائية</label>
+      <select id="watermark_type">
+        <option value="text">نص يكتبه المدير</option>
+        <option value="logo">شعار المتجر المرفوع</option>
+        <option value="image">صورة مخصصة (رابط)</option>
+      </select>
+    </div>
+
+    <div class="field" id="watermarkTextField">
+      <label for="watermark_text">نص العلامة المائية</label>
+      <input type="text" id="watermark_text" placeholder="مثال: اسم المتجر أو نص العلامة المائية" dir="rtl">
+    </div>
+
+    <div class="field hidden" id="watermarkImageField">
+      <label for="watermark_image_url">رابط صورة العلامة المائية</label>
+      <input type="url" id="watermark_image_url" placeholder="/api/image/Watermark.png أو رابط خارجي">
+      <small class="help-text">
+        يُستخدم عند اختيار "صورة مخصصة". يمكنك رفع صورة PNG ليتم حفظها باسم <strong>Watermark.png</strong> وتعبئة الرابط تلقائياً، أو مسحها بنفس طريقة الشعار.
+      </small>
+
+      <div class="logo-preview-wrap" style="margin-top:12px;min-height:120px;">
+        <img id="watermarkImagePreview" class="hidden" alt="معاينة صورة العلامة المائية"
+             style="display:block;max-width:200px;max-height:110px;width:auto;height:auto;object-fit:contain;">
+        <div id="watermarkImageEmpty" class="logo-empty">لا توجد صورة علامة مائية مرفوعة حالياً</div>
+      </div>
+
+      <div class="field" style="margin-top:10px;">
+        <label for="watermarkImageFile">اختيار صورة علامة مائية (PNG)</label>
+        <input type="file" id="watermarkImageFile" accept="image/png">
+        <small class="help-text">
+          الصيغة المطلوبة PNG، والحد الأقصى لحجم الملف 5 ميجابايت.
+        </small>
+      </div>
+
+      <div class="logo-actions">
+        <button type="button" class="btn btn-primary" id="uploadWatermarkBtn">
+          ⬆️ رفع واستبدال صورة العلامة المائية
+        </button>
+
+        <button type="button" class="btn btn-danger" id="deleteWatermarkBtn">
+          🗑️ مسح صورة العلامة المائية
+        </button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="watermark_opacity">شفافية العلامة المائية (من 0.05 إلى 0.40)</label>
+      <input type="number" id="watermark_opacity" step="0.01" min="0.05" max="0.40" value="0.10">
+      <small class="help-text">
+        رقم أصغر يعني شفافية أخف (مثلاً 0.08 أو 0.12) حتى تبقى مريحة ولا تغطي على المحتوى.
+      </small>
+    </div>
+
+    <button class="btn btn-success" id="saveWatermarkBtn">
+      💾 حفظ إعدادات العلامة المائية
+    </button>
+  </div>
+
   <!-- تغيير كلمة مرور المدير -->
   <div class="card">
     <h2>🔐 تغيير كلمة مرور المدير</h2>
@@ -1549,6 +1619,7 @@ async function loadSettings() {
     });
 
     showLogo(settings.store_logo_url || "");
+    showWatermarkImage(settings.watermark_image_url || "");
 
     let savedPalette = null;
 
@@ -1579,6 +1650,11 @@ async function loadSettings() {
 
     syncCurrencyPresetFromInput();
     syncTimezonePresetFromInput();
+
+    if ($("#watermark_opacity") && !$("#watermark_opacity").value) {
+      $("#watermark_opacity").value = "0.10";
+    }
+    syncWatermarkTypeFields();
 
   } catch (error) {
     toast("فشل تحميل الإعدادات: " + error.message, "error");
@@ -1951,6 +2027,208 @@ $("#saveCommunityWhatsappBtn").onclick = async () => {
     toast("تم حفظ إعدادات مجتمع واتساب بنجاح");
   } catch (error) {
     toast("فشل حفظ إعدادات المجتمع: " + error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+};
+
+// ---------- Watermark Image Preview / Upload / Delete ----------
+function showWatermarkImage(url) {
+  const preview = $("#watermarkImagePreview");
+  const empty = $("#watermarkImageEmpty");
+  const cleanUrl = String(url || "").trim();
+
+  if (!preview || !empty) return;
+
+  if (!cleanUrl) {
+    preview.removeAttribute("src");
+    preview.classList.add("hidden");
+    empty.textContent = "لا توجد صورة علامة مائية مرفوعة حالياً";
+    empty.classList.remove("hidden");
+    return;
+  }
+
+  preview.src = cleanUrl;
+  preview.classList.remove("hidden");
+  empty.classList.add("hidden");
+
+  preview.onerror = () => {
+    preview.removeAttribute("src");
+    preview.classList.add("hidden");
+    empty.textContent = "تعذر تحميل صورة العلامة المائية";
+    empty.classList.remove("hidden");
+  };
+
+  preview.onload = () => {
+    empty.classList.add("hidden");
+    preview.classList.remove("hidden");
+  };
+}
+
+$("#watermark_image_url")?.addEventListener("input", () => {
+  showWatermarkImage($("#watermark_image_url").value);
+});
+
+$("#uploadWatermarkBtn").onclick = async () => {
+  const fileInput = $("#watermarkImageFile");
+  const file = fileInput?.files?.[0];
+
+  if (!file) {
+    return toast("اختر صورة العلامة المائية أولاً", "error");
+  }
+
+  if (file.type !== "image/png") {
+    return toast("يجب اختيار صورة بصيغة PNG", "error");
+  }
+
+  if (file.size <= 0 || file.size > 5 * 1024 * 1024) {
+    return toast("حجم الصورة غير صالح أو يتجاوز 5 ميجابايت", "error");
+  }
+
+  const button = $("#uploadWatermarkBtn");
+  button.disabled = true;
+  button.textContent = "جارٍ رفع Watermark.png...";
+
+  try {
+    const formData = new FormData();
+    formData.append("type", "watermark");
+    formData.append("file", file);
+
+    const response = await fetch(`${API}/upload-image`, {
+      method: "POST",
+      headers: {
+        "X-Admin-Password": ADMIN_PASS
+      },
+      body: formData
+    });
+
+    const data = await readResponse(response);
+
+    if (!data.image_url) {
+      throw new Error("لم يرجع الخادم رابط صورة العلامة المائية");
+    }
+
+    $("#watermark_image_url").value = data.image_url;
+    showWatermarkImage(data.image_url);
+    fileInput.value = "";
+
+    toast("تم رفع وحفظ صورة العلامة المائية (Watermark.png) بنجاح");
+  } catch (error) {
+    toast("فشل رفع صورة العلامة المائية: " + error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "⬆️ رفع واستبدال صورة العلامة المائية";
+  }
+};
+
+$("#deleteWatermarkBtn").onclick = async () => {
+  const currentUrl = ($("#watermark_image_url")?.value || "").trim();
+
+  if (!currentUrl) {
+    return toast("لا توجد صورة علامة مائية مسجلة لحذفها", "error");
+  }
+
+  if (!confirm("هل أنت متأكد من مسح صورة العلامة المائية نهائياً؟")) {
+    return;
+  }
+
+  const button = $("#deleteWatermarkBtn");
+  button.disabled = true;
+  button.textContent = "جارٍ حذف الصورة...";
+
+  try {
+    const response = await fetch(`${API}/delete-image`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Password": ADMIN_PASS
+      },
+      body: JSON.stringify({ type: "watermark" })
+    });
+
+    await readResponse(response);
+
+    $("#watermark_image_url").value = "";
+    if ($("#watermarkImageFile")) $("#watermarkImageFile").value = "";
+    showWatermarkImage("");
+
+    toast("تم حذف صورة العلامة المائية ومسح رابطها بنجاح");
+  } catch (error) {
+    toast("تعذر حذف صورة العلامة المائية: " + error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "🗑️ مسح صورة العلامة المائية";
+  }
+};
+
+// ---------- Watermark Settings ----------
+function syncWatermarkTypeFields() {
+  const type = $("#watermark_type")?.value || "text";
+  const textField = $("#watermarkTextField");
+  const imageField = $("#watermarkImageField");
+
+  if (textField) {
+    textField.classList.toggle("hidden", type !== "text");
+  }
+
+  if (imageField) {
+    imageField.classList.toggle("hidden", type !== "image");
+  }
+}
+
+$("#watermark_type")?.addEventListener("change", syncWatermarkTypeFields);
+
+$("#saveWatermarkBtn").onclick = async () => {
+  const button = $("#saveWatermarkBtn");
+  const enabled = $("#watermark_enabled").checked ? "1" : "0";
+  const type = $("#watermark_type").value || "text";
+  const text = $("#watermark_text").value.trim();
+  const imageUrl = $("#watermark_image_url").value.trim();
+
+  let opacityNum = parseFloat($("#watermark_opacity").value);
+  if (Number.isNaN(opacityNum)) opacityNum = 0.10;
+  opacityNum = Math.min(0.40, Math.max(0.05, opacityNum));
+  const opacity = opacityNum.toFixed(2);
+  $("#watermark_opacity").value = opacity;
+
+  if (enabled === "1") {
+    if (type === "text" && !text) {
+      return toast("أدخل نص العلامة المائية أولاً", "error");
+    }
+    if (type === "image" && !imageUrl) {
+      return toast("أدخل رابط صورة العلامة المائية أو ارفعها أولاً", "error");
+    }
+    if (type === "logo" && !currentLogoUrl) {
+      return toast("لا يوجد شعار مرفوع حالياً لاستخدامه كعلامة مائية", "error");
+    }
+  }
+
+  const payload = {
+    settings: {
+      watermark_enabled: enabled,
+      watermark_type: type,
+      watermark_text: text,
+      watermark_image_url: imageUrl,
+      watermark_opacity: opacity
+    }
+  };
+
+  button.disabled = true;
+
+  try {
+    const response = await fetch(`${API}/settings`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Password": ADMIN_PASS
+      },
+      body: JSON.stringify(payload)
+    });
+
+    await readResponse(response);
+    toast("تم حفظ إعدادات العلامة المائية بنجاح");
+  } catch (error) {
+    toast("فشل حفظ إعدادات العلامة المائية: " + error.message, "error");
   } finally {
     button.disabled = false;
   }
