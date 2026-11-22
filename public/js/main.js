@@ -530,16 +530,35 @@ function renderProductModal(p) {
 
       freshWrap.addEventListener('wheel', (e) => {
         e.preventDefault();
+        if (!freshImg) return;
+
         const prevScale = scale;
-        scale = e.deltaY < 0 ? Math.min(3, +(scale + 0.2).toFixed(2)) : Math.max(1, +(scale - 0.2).toFixed(2));
-        if (scale === 1) {
+        const step = 0.25;
+        const nextScale = e.deltaY < 0
+          ? Math.min(3.5, +(prevScale + step).toFixed(2))
+          : Math.max(1, +(prevScale - step).toFixed(2));
+
+        if (nextScale === prevScale) return;
+
+        if (nextScale <= 1) {
+          scale = 1;
           panX = 0;
           panY = 0;
-        } else if (prevScale > 1) {
-          const ratio = scale / prevScale;
-          panX *= ratio;
-          panY *= ratio;
+          renderZoom();
+          return;
         }
+
+        // حساب موقع المؤشر داخل الصورة لتثبيت النقطة تحت الماوس أثناء التكبير
+        const rect = freshImg.getBoundingClientRect();
+        const pointerX = e.clientX - rect.left;
+        const pointerY = e.clientY - rect.top;
+
+        // إحداثيات النقطة بالنسبة للصورة قبل التغيير
+        const ratio = nextScale / prevScale;
+        panX = panX - pointerX * (ratio - 1);
+        panY = panY - pointerY * (ratio - 1);
+        scale = nextScale;
+
         renderZoom();
       }, { passive: false });
 
