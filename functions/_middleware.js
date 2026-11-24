@@ -9,7 +9,7 @@ function escapeHtml(value) {
 
 function toAbsoluteUrl(rawUrl, origin) {
   const clean = String(rawUrl || "").trim();
-  if (!clean) return `${origin}/images/logo.png`;[cite: 2]
+  if (!clean) return `${origin}/images/logo.png`;
 
   try {
     const parsed = new URL(clean, origin);
@@ -17,10 +17,10 @@ function toAbsoluteUrl(rawUrl, origin) {
       return parsed.href;
     }
   } catch {
-    return `${origin}/images/logo.png`;[cite: 2]
+    return `${origin}/images/logo.png`;
   }
 
-  return `${origin}/images/logo.png`;[cite: 2]
+  return `${origin}/images/logo.png`;
 }
 
 async function loadStoreMetaSettings(db) {
@@ -64,13 +64,13 @@ export async function onRequest(context) {
   let html = await response.text();
 
   try {
-    const settings = await loadStoreMetaSettings(env?.DB);[cite: 5]
+    const settings = await loadStoreMetaSettings(env?.DB);
 
-    const nameAr = String(settings.store_name_ar || "").trim();[cite: 2, 3, 5]
-    const nameEn = String(settings.store_name_en || "").trim();[cite: 2, 3, 5]
-    const fullTitle = [nameAr, nameEn].filter(Boolean).join(" | ") || "المتجر";[cite: 2, 3, 5]
-    const description = [nameAr, nameEn].filter(Boolean).join(" - ") || "المتجر";[cite: 2, 3, 5]
-    const logoUrl = toAbsoluteUrl(settings.store_logo_url, url.origin);[cite: 3, 5]
+    const nameAr = String(settings.store_name_ar || "").trim();
+    const nameEn = String(settings.store_name_en || "").trim();
+    const fullTitle = [nameAr, nameEn].filter(Boolean).join(" | ") || "المتجر";
+    const description = [nameAr, nameEn].filter(Boolean).join(" - ") || "المتجر";
+    const logoUrl = toAbsoluteUrl(settings.store_logo_url, url.origin);
 
     const safeTitle = escapeHtml(fullTitle);
     const safeDesc = escapeHtml(description);
