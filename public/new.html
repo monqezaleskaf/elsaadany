@@ -319,8 +319,12 @@
     }
 
     function openShareModalForProduct(p) {
-      const url = `${location.origin}/product.html?id=${p.id}`;
-      const text = `شاهد ${p.name} على متجرنا`;
+      const storeName =
+        (document.getElementById('storeNameAr')?.textContent || '').trim() ||
+        (document.getElementById('storeNameEn')?.textContent || '').trim() ||
+        'متجرنا';
+      const url = `${location.origin}/share?id=${p.id}`;
+      const text = `شاهد ${p.name} على ${storeName}`;
       document.getElementById('shareWa').href = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
       document.getElementById('shareFb').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
       document.getElementById('shareTg').href = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
