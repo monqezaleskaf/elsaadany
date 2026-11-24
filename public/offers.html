@@ -53,8 +53,8 @@
       flex-direction: column !important;
       max-width: 520px !important;
       width: 94vw !important;
-      height: 88vh !important;
-      max-height: 88vh !important;
+      height: auto !important;
+      max-height: 90vh !important;
       padding: 12px !important;
       gap: 6px !important;
       overflow-y: auto !important;
@@ -63,8 +63,6 @@
     .product-modal-content #pmContent {
       display: flex !important;
       flex-direction: column !important;
-      flex: 1 1 auto !important;
-      min-height: 0 !important;
       gap: 6px !important;
     }
     #productModal .pm-image-wrap,
@@ -72,9 +70,8 @@
       position: relative !important;
       width: 100% !important;
       max-width: 100% !important;
-      flex: 0 0 65% !important;
-      height: 65% !important;
-      min-height: 0 !important;
+      height: 52vh !important;
+      min-height: 220px !important;
       margin: 0 auto !important;
       background: #f9fafb !important;
       border-radius: var(--radius-sm) !important;
@@ -109,13 +106,6 @@
     #productModal .pm-image-wrap.is-dragging img,
     .pm-image-wrap.is-dragging img {
       transition: none !important;
-    }
-    #productModal #pmContent > *:not(.pm-image-wrap),
-    .product-modal-content > *:not(.pm-image-wrap) {
-      flex: 0 0 auto !important;
-      margin: 0 !important;
-      padding-top: 0 !important;
-      padding-bottom: 0 !important;
     }
     #productModal h2,
     .product-modal-content h2 {
