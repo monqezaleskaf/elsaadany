@@ -1,6 +1,7 @@
 const GITHUB_OWNER = "monqezaleskaf";
 const GITHUB_REPO = "elsaadany";
 const GITHUB_BRANCH = "main";
+
 export async function onRequestGet({ params, env }) {
   try {
     const pathParts = params.path;
@@ -50,7 +51,7 @@ export async function onRequestGet({ params, env }) {
       (pathParts[1].endsWith(".png") || pathParts[1].endsWith(".svg"))
     ) {
       const isPng = pathParts[1].endsWith(".png");
-      const rawId = isPng ? pathParts[1].slice(0, -4) : pathParts[1].slice(0, -4);
+      const rawId = pathParts[1].slice(0, -4);
       const offerId = decodeURIComponent(rawId).trim();
       if (!offerId || offerId === "." || offerId === "..") {
         return imageError("معرّف العرض غير صالح", 400);
@@ -277,7 +278,20 @@ async function buildOfferCompositeSvgResponse(offerId, env) {
   }
 </svg>`;
 
-    async function buildOfferCompositePngResponse(offerId, env) {
+    return new Response(svg, {
+      status: 200,
+      headers: {
+        "Content-Type": "image/svg+xml; charset=utf-8",
+        "Cache-Control": "no-cache",
+        "X-Content-Type-Options": "nosniff"
+      }
+    });
+  } catch (err) {
+    return imageError("حدث خطأ أثناء تجهيز صورة العرض: " + (err?.message || ""), 500);
+  }
+}
+
+async function buildOfferCompositePngResponse(offerId, env) {
   try {
     const db = env?.DB;
     if (!db) {
@@ -347,6 +361,8 @@ async function buildOfferCompositeSvgResponse(offerId, env) {
     return imageError("حدث خطأ أثناء تجهيز صورة العرض: " + (err?.message || ""), 500);
   }
 }
+
+function imageError(message, status) {
   return new Response(message, {
     status,
     headers: {
