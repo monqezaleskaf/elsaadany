@@ -225,8 +225,29 @@
     }
 
     function openShareModalForOffer(offer) {
-      const url = `${location.origin}/offers.html#offer-${offer.id}`;
+      const url = `${location.origin}/offers.html?offer=${encodeURIComponent(offer.id)}#offer-${offer.id}`;
       const text = `شاهد العرض "${offer.title}" على متجرنا`;
+      document.getElementById('shareWa').href = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+      document.getElementById('shareFb').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+      document.getElementById('shareTg').href = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+
+      document.getElementById('shareCopy').onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(url);
+          showToast('📋 تم نسخ رابط العرض');
+          document.getElementById('shareModal').classList.add('hidden');
+        } catch (e) {
+          showToast('❌ فشل النسخ');
+        }
+      };
+
+      const closeMenu = () => document.getElementById('shareModal').classList.add('hidden');
+      document.getElementById('shareWa').onclick = closeMenu;
+      document.getElementById('shareFb').onclick = closeMenu;
+      document.getElementById('shareTg').onclick = closeMenu;
+
+      document.getElementById('shareModal').classList.remove('hidden');
+    }
       document.getElementById('shareWa').href = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
       document.getElementById('shareFb').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
       document.getElementById('shareTg').href = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
@@ -268,6 +289,7 @@
         }
 
         renderOffersGrid(cachedOffers);
+        focusSharedOfferIfPresent();
       } catch (err) {
         document.getElementById('loading').textContent = '❌ خطأ: ' + err.message;
       }
@@ -383,6 +405,23 @@
 
         grid.appendChild(card);
       });
+    }
+
+    function focusSharedOfferIfPresent() {
+      const params = new URLSearchParams(location.search);
+      const queryOfferId = String(params.get('offer') || '').trim();
+      const hashMatch = String(location.hash || '').match(/^#offer-(.+)$/);
+      const targetOfferId = queryOfferId || (hashMatch ? hashMatch[1] : '');
+      if (!targetOfferId) return;
+
+      const card = document.getElementById(`offer-${targetOfferId}`);
+      if (!card) return;
+
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.boxShadow = '0 0 0 3px var(--primary), 0 8px 24px rgba(0,0,0,0.12)';
+      setTimeout(() => {
+        card.style.boxShadow = '';
+      }, 2500);
     }
 
     document.addEventListener('click', (e) => {
