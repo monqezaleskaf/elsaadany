@@ -47,11 +47,141 @@ async function loadStoreMetaSettings(db) {
   }
 }
 
+async function resolveOfferShareImage(db, offer, items, origin, fallbackLogoUrl) {
+  const safeOfferId = encodeURIComponent(String(offer?.id || "").trim());
+  const compositeUrl = safeOfferId
+    ? `${origin}/api/image/offer-share/${safeOfferId}.svg`
+    : "";
+
+  const firstProductId = Array.isArray(items) && items.length > 0
+    ? encodeURIComponent(String(items[0]?.product_id || "").trim())
+    : "";
+  const firstProductUrl = firstProductId
+    ? `${origin}/api/image/products/${firstProductId}.webp`
+    : "";
+
+  for (const candidate of [compositeUrl, firstProductUrl, fallbackLogoUrl]) {
+    const clean = String(candidate || "").trim();
+    if (!clean) continue;
+    try {
+      const res = await fetch(clean, { method: "HEAD" });
+      if (res.ok) {
+        const contentType = String(res.headers.get("content-type") || "").toLowerCase();
+        if (!contentType || contentType.startsWith("image/")) {
+          return clean;
+        }
+      }
+    } catch {
+      // ننتقل للخيار الاحتياطي التالي
+    }
+  }
+
+  return fallbackLogoUrl || `${origin}/images/logo.png`;
+}
+
+async function loadOfferShareMeta(db, offerId, origin, fallbackLogoUrl, storeName) {
+  if (!db || !offerId) return null;
+
+  try {
+    const offer = await db
+      .prepare("SELECT * FROM offers WHERE id = ? LIMIT 1")
+      .bind(offerId)
+      .first();
+
+    if (!offer) return null;
+
+    const itemsResult = await db
+      .prepare(
+        `SELECT oi.*, p.name as product_name, p.price as product_price
+         FROM offer_items oi
+         JOIN products p ON p.id = oi.product_id
+         WHERE oi.offer_id = ?`
+      )
+      .bind(offer.id)
+      .all();
+
+    const items = itemsResult?.results || [];
+
+    let originalTotal = 0;
+    for (const item of items) {
+      const qty = Number(item.quantity || 1);
+      const price = Number(item.product_price || 0);
+      originalTotal += qty * price;
+    }
+
+    let finalPrice = originalTotal;
+    if (Number(offer.manual_price) > 0) {
+      finalPrice = Number(offer.manual_price);
+    } else if (Number(offer.discount_percent) > 0) {
+      finalPrice = originalTotal - originalTotal * (Number(offer.discount_percent) / 100);
+    }
+
+    const discountPercent =
+      originalTotal > 0
+        ? Math.round(((originalTotal - finalPrice) / originalTotal) * 100)
+        : 0;
+
+    const itemsSummary = items
+      .map((item) => {
+        const qty = Number(item.quantity || 1);
+        const name = String(item.product_name || "").trim();
+        return qty > 1 ? `${name} (${qty})` : name;
+      })
+      .filter(Boolean)
+      .join(" + ");
+
+    const offerTitle = String(offer.title || "عرض مميز").trim();
+    const title = storeName ? `${offerTitle} | ${storeName}` : offerTitle;
+
+    const priceParts = [];
+    if (finalPrice > 0) {
+      priceParts.push(`السعر النهائي: ${finalPrice}`);
+    }
+    if (originalTotal > finalPrice && originalTotal > 0) {
+      priceParts.push(`بدلاً من ${originalTotal}`);
+    }
+    if (discountPercent > 0) {
+      priceParts.push(`توفير ${discountPercent}%`);
+    }
+
+    const description =
+      [itemsSummary, priceParts.join(" | "), storeName]
+        .filter(Boolean)
+        .join(" — ") || offerTitle;
+
+    const imageUrl = await resolveOfferShareImage(
+      db,
+      offer,
+      items,
+      origin,
+      fallbackLogoUrl
+    );
+
+    const sharePageUrl = `${origin}/offers.html?offer=${encodeURIComponent(
+      String(offer.id)
+    )}#offer-${encodeURIComponent(String(offer.id))}`;
+
+    return {
+      title,
+      description,
+      imageUrl,
+      url: sharePageUrl
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function onRequest(context) {
   const { env, request, next } = context;
   const url = new URL(request.url);
 
-  if (url.pathname !== "/" && url.pathname !== "/index.html") {
+  const isHomePage = url.pathname === "/" || url.pathname === "/index.html";
+  const isOffersPageWithId =
+    url.pathname === "/offers.html" &&
+    Boolean(String(url.searchParams.get("offer") || "").trim());
+
+  if (!isHomePage && !isOffersPageWithId) {
     return next();
   }
 
@@ -68,14 +198,35 @@ export async function onRequest(context) {
 
     const nameAr = String(settings.store_name_ar || "").trim();
     const nameEn = String(settings.store_name_en || "").trim();
-    const fullTitle = [nameAr, nameEn].filter(Boolean).join(" | ") || "المتجر";
-    const description = [nameAr, nameEn].filter(Boolean).join(" - ") || "المتجر";
+    const storeName = [nameAr, nameEn].filter(Boolean).join(" | ") || "المتجر";
     const logoUrl = toAbsoluteUrl(settings.store_logo_url, url.origin);
+
+    let fullTitle = storeName;
+    let description = [nameAr, nameEn].filter(Boolean).join(" - ") || "المتجر";
+    let shareImageUrl = logoUrl;
+    let sharePageUrl = `${url.origin}/`;
+
+    if (isOffersPageWithId) {
+      const offerId = String(url.searchParams.get("offer") || "").trim();
+      const offerMeta = await loadOfferShareMeta(
+        env?.DB,
+        offerId,
+        url.origin,
+        logoUrl,
+        storeName
+      );
+      if (offerMeta) {
+        fullTitle = offerMeta.title;
+        description = offerMeta.description;
+        shareImageUrl = offerMeta.imageUrl;
+        sharePageUrl = offerMeta.url;
+      }
+    }
 
     const safeTitle = escapeHtml(fullTitle);
     const safeDesc = escapeHtml(description);
-    const safeLogo = escapeHtml(logoUrl);
-    const safeUrl = escapeHtml(`${url.origin}/`);
+    const safeLogo = escapeHtml(shareImageUrl);
+    const safeUrl = escapeHtml(sharePageUrl);
 
     html = html.replace(/<title[^>]*>[\s\S]*?<\/title>/i, `<title>${safeTitle}</title>`);
 
