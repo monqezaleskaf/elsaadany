@@ -21,11 +21,86 @@
     .offer-badge { background: #10b981; color: #fff; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; display: inline-block; margin-bottom: 5px; }
 
     .offer-products { padding: 15px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-    .offer-product-item { display: flex; align-items: center; gap: 10px; background: #f9fafb; padding: 8px; border-radius: 8px; }
+    .offer-product-item { display: flex; align-items: center; gap: 10px; background: #f9fafb; padding: 8px; border-radius: 8px; cursor: pointer; transition: background 0.15s ease; }
+    .offer-product-item:hover { background: #eef2ff; }
     .offer-product-item img { width: 40px; height: 40px; object-fit: contain; border-radius: 6px; }
     .offer-product-item .info { flex: 1; }
     .offer-product-item .name { font-size: 0.85rem; font-weight: 700; }
     .offer-product-item .qty { font-size: 0.75rem; color: var(--text-muted); }
+    .offer-product-preview-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid #dbeafe;
+      background: #fff;
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+    .offer-product-item:hover .offer-product-preview-btn {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .product-modal-content {
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .pm-image-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #f9fafb;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-in;
+      user-select: none;
+      touch-action: none;
+    }
+    .pm-image-wrap.is-zoomed {
+      cursor: grab;
+    }
+    .pm-image-wrap.is-dragging {
+      cursor: grabbing;
+    }
+    .pm-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transform-origin: center center;
+      transform: translate(0px, 0px) scale(1);
+      transition: transform 0.08s ease-out;
+      will-change: transform;
+    }
+    .pm-image-wrap.is-dragging img {
+      transition: none;
+    }
+    .pm-image-wrap .product-placeholder {
+      font-size: 4rem;
+    }
+    .meta-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: #e0e7ff;
+      color: var(--primary);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
 
     .offer-footer { padding: 15px; border-top: 1px solid #eee; }
     .offer-price-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -108,6 +183,60 @@
     </div>
     <div class="offers-grid" id="offersGrid"></div>
   </main>
+
+  <!-- ============ PRODUCT MODAL ============ -->
+  <div class="modal-overlay hidden" id="productModal" style="z-index: 250;">
+    <div class="modal-content product-modal-content">
+      <button type="button" class="modal-close" id="closeProductModal" style="z-index: 10;">✕</button>
+
+      <div id="pmLoading" class="loading" style="padding: 40px;">⏳ جاري تحميل المنتج...</div>
+      <div id="pmError" class="empty-state hidden">
+        <div class="emoji">❌</div>
+        <p>عذراً، لم يتم العثور على هذا المنتج.</p>
+      </div>
+
+      <div id="pmContent" class="hidden" style="display: flex; flex-direction: column; gap: 16px; text-align: right;">
+        <div class="pm-image-wrap">
+          <span class="product-id-badge" id="pmId" style="top: 8px; right: 8px;"></span>
+          <img id="pmImg" src="" alt="">
+        </div>
+
+        <div>
+          <div class="meta-row" style="margin-bottom: 8px;">
+            <span class="badge" id="pmBrand"></span>
+            <span class="badge" id="pmCategory" style="background:#f3f4f6; color:#333;"></span>
+          </div>
+          <h2 id="pmName" style="color: var(--primary); font-size: 1.3rem; line-height: 1.3;"></h2>
+          <p id="pmDesc" style="font-size: 0.95rem; color: #555; margin: 10px 0; line-height: 1.6; display: none;"></p>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div class="price-large" id="pmPrice" style="font-size: 1.6rem;"></div>
+          <div id="pmTotalPrice" style="font-size: 1.3rem; font-weight: 800; color: #10b981; background: #ecfdf5; padding: 4px 12px; border-radius: 999px; display: none;"></div>
+        </div>
+
+        <div style="color:var(--text-muted); font-size: 0.9rem;">
+          المخزون: <strong id="pmStock"></strong>
+        </div>
+
+        <div style="border-top:1px solid var(--border); padding-top:16px;">
+          <p style="margin-bottom: 8px; font-weight:700; font-size: 0.9rem;">الكمية المطلوبة:</p>
+          <div class="qty-control">
+            <button type="button" class="qty-btn" id="pmBtnMinus">−</button>
+            <span class="qty-value" id="pmQtyVal">1</span>
+            <button type="button" class="qty-btn" id="pmBtnPlus">+</button>
+            <input type="range" class="qty-slider" id="pmQtySlider" min="1" value="1">
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top: 8px;">
+          <button type="button" class="btn-primary" id="pmAddToCart" style="flex:1; padding:14px; font-size:1rem;">🛒 أضف للسلة</button>
+          <button type="button" class="btn-icon-small share" id="pmShareBtn" style="width:50px; height:auto;" title="مشاركة">🔗</button>
+          <button type="button" class="btn-icon-small trash" id="pmTrashBtn" style="width:50px; height:auto; color:var(--danger);" title="حذف من السلة">🗑️</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ============ SHARE MENU ============ -->
   <div class="modal-overlay hidden" id="shareModal" style="z-index: 300;">
@@ -307,12 +436,13 @@
         card.id = `offer-${o.id}`;
 
         const productsHtml = items.map(item => `
-          <div class="offer-product-item">
+          <div class="offer-product-item" data-product-id="${Number(item.product_id)}" title="انقر لعرض وتكبير صورة المنتج">
             <img src="/api/image/products/${Number(item.product_id)}.webp" alt="${item.product_name || ''}" onerror="this.onerror=null;this.src='/images/logo.png';">
             <div class="info">
               <div class="name">${item.product_name || ''}</div>
               <div class="qty">الكمية: ${item.quantity}</div>
             </div>
+            <button type="button" class="offer-product-preview-btn" data-preview-product="${Number(item.product_id)}" title="معاينة وتكبير الصورة">🔍</button>
           </div>
         `).join('');
 
@@ -409,6 +539,398 @@
         if (e.target.closest('#closeShareModal') || e.target === shareModal) {
           shareModal.classList.add('hidden');
         }
+      }
+    });
+
+    const productModal = document.getElementById('productModal');
+    const pmCloseBtn = document.getElementById('closeProductModal');
+    const pmLoading = document.getElementById('pmLoading');
+    const pmError = document.getElementById('pmError');
+    const pmContent = document.getElementById('pmContent');
+
+    function escapeHtmlOffer(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function addSingleProductFromOfferModal(product, quantity) {
+      const cart = loadCart();
+      const productId = Number(product.id);
+      const maxStock = Number(product.stock || 0);
+      const existing = cart.find(i => Number(i.id) === productId);
+
+      if (existing) {
+        existing.quantity = Math.min(existing.quantity + quantity, maxStock > 0 ? maxStock : existing.quantity + quantity);
+      } else {
+        cart.push({
+          id: productId,
+          name: product.name,
+          price: Number(product.price || 0),
+          stock: maxStock,
+          quantity
+        });
+      }
+
+      saveCart(cart);
+      showToast(`✅ تمت إضافة ${quantity} × ${product.name} للسلة`);
+    }
+
+    function removeSingleProductFromOfferModal(productId) {
+      const cart = loadCart().filter(i => Number(i.id) !== Number(productId));
+      saveCart(cart);
+      showToast('🗑️ تم حذف المنتج من السلة');
+    }
+
+    async function openProductModalFromOffer(productId) {
+      if (!productModal || !productId) return;
+      productModal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+      pmContent.classList.add('hidden');
+      pmError.classList.add('hidden');
+      pmLoading.classList.remove('hidden');
+      pmLoading.textContent = '⏳ جاري تحميل المنتج...';
+
+      try {
+        let product = null;
+        for (const offer of cachedOffers) {
+          const found = (offer.items || []).find(it => Number(it.product_id) === Number(productId));
+          if (found) {
+            product = {
+              id: Number(found.product_id),
+              name: found.product_name || '',
+              price: Number(found.product_price || 0),
+              stock: Number(found.product_stock || 0),
+              brand: found.product_brand || found.brand || '',
+              category: found.product_category || found.category || '',
+              description: found.product_description || found.description || ''
+            };
+          }
+        }
+
+        const res = await fetch(`/api/products?id=${encodeURIComponent(productId)}`);
+        const data = await res.json().catch(() => null);
+        if (data && data.ok && data.product) {
+          product = { ...(product || {}), ...data.product };
+        }
+
+        if (!product || !product.id) throw new Error('غير موجود');
+        renderOfferProductModal(product);
+      } catch (e) {
+        pmLoading.classList.add('hidden');
+        pmError.classList.remove('hidden');
+      }
+    }
+
+    function closeOfferProductModal() {
+      if (!productModal) return;
+      const imgWrap = document.querySelector('.pm-image-wrap');
+      if (imgWrap && imgWrap._zoomCleanup) {
+        imgWrap._zoomCleanup();
+        imgWrap._zoomCleanup = null;
+      }
+      productModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    }
+
+    function renderOfferProductModal(p) {
+      const totalEl = document.getElementById('pmTotalPrice');
+      if (totalEl) {
+        totalEl.textContent = '';
+        totalEl.style.display = 'none';
+      }
+      pmLoading.classList.add('hidden');
+      pmError.classList.add('hidden');
+      pmContent.classList.remove('hidden');
+
+      const maxQty = Math.max(1, Number(p.stock || 1));
+      const outOfStock = Number(p.stock || 0) <= 0;
+
+      document.getElementById('pmId').textContent = `#${p.id}`;
+      document.getElementById('pmName').textContent = p.name || '';
+      const pmDesc = document.getElementById('pmDesc');
+      if (p.description && String(p.description).trim() !== '') {
+        pmDesc.textContent = p.description;
+        pmDesc.style.display = 'block';
+      } else {
+        pmDesc.style.display = 'none';
+      }
+      document.getElementById('pmBrand').textContent = p.brand || '';
+      document.getElementById('pmCategory').textContent = p.category || '';
+      document.getElementById('pmPrice').textContent = formatCurrency(p.price);
+      document.getElementById('pmStock').textContent = outOfStock ? 'نفد' : Number(p.stock);
+
+      const imgWrap = document.querySelector('.pm-image-wrap');
+      if (imgWrap) {
+        if (imgWrap._zoomCleanup) {
+          imgWrap._zoomCleanup();
+          imgWrap._zoomCleanup = null;
+        }
+
+        imgWrap.innerHTML = `
+          <span class="product-id-badge" id="pmId" style="top: 8px; right: 8px;">#${p.id}</span>
+          <img id="pmImg" src="/api/image/products/${Number(p.id)}.webp" alt="${escapeHtmlOffer(p.name || '')}" onerror="this.outerHTML='<div class=&quot;product-placeholder&quot;>🛍️</div>';">
+        `;
+
+        const activeImg = imgWrap.querySelector('#pmImg');
+        if (activeImg) {
+          let scale = 1;
+          let panX = 0;
+          let panY = 0;
+          let isDragging = false;
+          let startX = 0;
+          let startY = 0;
+          let pinchStartDist = 0;
+          let pinchStartScale = 1;
+
+          const clampPan = () => {
+            if (!activeImg || scale <= 1) {
+              scale = 1;
+              panX = 0;
+              panY = 0;
+              return;
+            }
+            const wrapRect = imgWrap.getBoundingClientRect();
+            const baseW = activeImg.clientWidth || wrapRect.width;
+            const baseH = activeImg.clientHeight || wrapRect.height;
+            const maxX = Math.max(0, (baseW * scale - wrapRect.width) / 2);
+            const maxY = Math.max(0, (baseH * scale - wrapRect.height) / 2);
+            panX = Math.max(-maxX, Math.min(maxX, panX));
+            panY = Math.max(-maxY, Math.min(maxY, panY));
+          };
+
+          const renderZoom = () => {
+            if (!activeImg) return;
+            clampPan();
+            activeImg.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+            imgWrap.classList.toggle('is-zoomed', scale > 1);
+          };
+
+          const resetZoom = () => {
+            scale = 1;
+            panX = 0;
+            panY = 0;
+            isDragging = false;
+            pinchStartDist = 0;
+            imgWrap.classList.remove('is-dragging');
+            renderZoom();
+          };
+
+          resetZoom();
+
+          const onWheel = (e) => {
+            e.preventDefault();
+            if (!activeImg) return;
+            const prevScale = scale;
+            const nextScale = e.deltaY < 0
+              ? Math.min(3.5, +(prevScale + 0.25).toFixed(2))
+              : Math.max(1, +(prevScale - 0.25).toFixed(2));
+            if (nextScale === prevScale) return;
+            if (nextScale <= 1) {
+              resetZoom();
+              return;
+            }
+            const wrapRect = imgWrap.getBoundingClientRect();
+            const imgCenterX = wrapRect.left + wrapRect.width / 2 + panX;
+            const imgCenterY = wrapRect.top + wrapRect.height / 2 + panY;
+            const dx = e.clientX - imgCenterX;
+            const dy = e.clientY - imgCenterY;
+            const ratio = nextScale / prevScale;
+            panX = panX - dx * (ratio - 1);
+            panY = panY - dy * (ratio - 1);
+            scale = nextScale;
+            renderZoom();
+          };
+
+          const onMouseDown = (e) => {
+            if (e.button !== 0 || scale <= 1) return;
+            e.preventDefault();
+            isDragging = true;
+            startX = e.clientX - panX;
+            startY = e.clientY - panY;
+            imgWrap.classList.add('is-dragging');
+          };
+
+          const onWindowMouseMove = (e) => {
+            if (!isDragging || scale <= 1) return;
+            panX = e.clientX - startX;
+            panY = e.clientY - startY;
+            renderZoom();
+          };
+
+          const onWindowMouseUp = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            imgWrap.classList.remove('is-dragging');
+          };
+
+          const getTouchDist = (t1, t2) => Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+          const onTouchStart = (e) => {
+            if (e.touches.length === 2) {
+              isDragging = false;
+              imgWrap.classList.remove('is-dragging');
+              pinchStartDist = getTouchDist(e.touches[0], e.touches[1]);
+              pinchStartScale = scale;
+            } else if (e.touches.length === 1 && scale > 1) {
+              isDragging = true;
+              startX = e.touches[0].clientX - panX;
+              startY = e.touches[0].clientY - panY;
+              imgWrap.classList.add('is-dragging');
+            }
+          };
+
+          const onTouchMove = (e) => {
+            if (e.touches.length === 2 && pinchStartDist > 0) {
+              e.preventDefault();
+              const dist = getTouchDist(e.touches[0], e.touches[1]);
+              scale = Math.max(1, Math.min(3.5, +(pinchStartScale * (dist / pinchStartDist)).toFixed(2)));
+              if (scale <= 1) {
+                panX = 0;
+                panY = 0;
+              }
+              renderZoom();
+            } else if (e.touches.length === 1 && isDragging && scale > 1) {
+              e.preventDefault();
+              panX = e.touches[0].clientX - startX;
+              panY = e.touches[0].clientY - startY;
+              renderZoom();
+            }
+          };
+
+          const onTouchEnd = (e) => {
+            if (e.touches.length < 2) pinchStartDist = 0;
+            if (e.touches.length === 0) {
+              isDragging = false;
+              imgWrap.classList.remove('is-dragging');
+            }
+          };
+
+          const onDblClick = () => {
+            if (scale > 1) resetZoom();
+            else {
+              scale = 2;
+              renderZoom();
+            }
+          };
+
+          imgWrap.addEventListener('wheel', onWheel, { passive: false });
+          imgWrap.addEventListener('mousedown', onMouseDown);
+          window.addEventListener('mousemove', onWindowMouseMove);
+          window.addEventListener('mouseup', onWindowMouseUp);
+          imgWrap.addEventListener('touchstart', onTouchStart, { passive: false });
+          imgWrap.addEventListener('touchmove', onTouchMove, { passive: false });
+          imgWrap.addEventListener('touchend', onTouchEnd);
+          imgWrap.addEventListener('touchcancel', onTouchEnd);
+          imgWrap.addEventListener('dblclick', onDblClick);
+
+          imgWrap._zoomCleanup = () => {
+            resetZoom();
+            imgWrap.removeEventListener('wheel', onWheel);
+            imgWrap.removeEventListener('mousedown', onMouseDown);
+            window.removeEventListener('mousemove', onWindowMouseMove);
+            window.removeEventListener('mouseup', onWindowMouseUp);
+            imgWrap.removeEventListener('touchstart', onTouchStart);
+            imgWrap.removeEventListener('touchmove', onTouchMove);
+            imgWrap.removeEventListener('touchend', onTouchEnd);
+            imgWrap.removeEventListener('touchcancel', onTouchEnd);
+            imgWrap.removeEventListener('dblclick', onDblClick);
+          };
+        }
+      }
+
+      const slider = document.getElementById('pmQtySlider');
+      const qtyVal = document.getElementById('pmQtyVal');
+      const btnMinus = document.getElementById('pmBtnMinus');
+      const btnPlus = document.getElementById('pmBtnPlus');
+      const addBtn = document.getElementById('pmAddToCart');
+      const shareBtn = document.getElementById('pmShareBtn');
+      const trashBtn = document.getElementById('pmTrashBtn');
+
+      slider.max = maxQty;
+      slider.value = 1;
+      qtyVal.textContent = 1;
+      slider.disabled = outOfStock;
+      btnMinus.disabled = outOfStock;
+      btnPlus.disabled = outOfStock;
+      addBtn.disabled = outOfStock;
+      addBtn.textContent = outOfStock ? 'نفد المخزون' : '🛒 أضف للسلة';
+
+      const setQty = (v) => {
+        v = Math.max(1, Math.min(maxQty, v));
+        slider.value = v;
+        qtyVal.textContent = v;
+        const liveTotal = document.getElementById('pmTotalPrice');
+        if (liveTotal) {
+          if (v > 1) {
+            liveTotal.textContent = ` ${formatCurrency(v * Number(p.price))}`;
+            liveTotal.style.display = 'block';
+          } else {
+            liveTotal.style.display = 'none';
+          }
+        }
+      };
+
+      slider.oninput = () => setQty(+slider.value);
+      btnMinus.onclick = () => setQty(+slider.value - 1);
+      btnPlus.onclick = () => setQty(+slider.value + 1);
+
+      addBtn.onclick = () => {
+        addSingleProductFromOfferModal(p, +slider.value);
+        setQty(1);
+      };
+
+      if (trashBtn) {
+        trashBtn.onclick = () => removeSingleProductFromOfferModal(p.id);
+      }
+
+      if (shareBtn) {
+        shareBtn.onclick = () => {
+          const storeName =
+            (document.getElementById('storeNameAr')?.textContent || '').trim() ||
+            (document.getElementById('storeNameEn')?.textContent || '').trim() ||
+            'متجرنا';
+          const url = `${location.origin}/share?id=${p.id}`;
+          const text = `شاهد ${p.name} على ${storeName}`;
+          document.getElementById('shareWa').href = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+          document.getElementById('shareFb').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+          document.getElementById('shareTg').href = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+          document.getElementById('shareCopy').onclick = async () => {
+            try {
+              await navigator.clipboard.writeText(url);
+              showToast('📋 تم نسخ رابط المنتج');
+              document.getElementById('shareModal').classList.add('hidden');
+            } catch (e) {
+              showToast('❌ فشل النسخ');
+            }
+          };
+          const closeMenu = () => document.getElementById('shareModal').classList.add('hidden');
+          document.getElementById('shareWa').onclick = closeMenu;
+          document.getElementById('shareFb').onclick = closeMenu;
+          document.getElementById('shareTg').onclick = closeMenu;
+          document.getElementById('shareModal').classList.remove('hidden');
+        };
+      }
+    }
+
+    if (pmCloseBtn) pmCloseBtn.onclick = closeOfferProductModal;
+    if (productModal) {
+      productModal.addEventListener('click', (e) => {
+        if (e.target === productModal) closeOfferProductModal();
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      const previewBtn = e.target.closest('[data-preview-product]');
+      if (previewBtn) {
+        e.stopPropagation();
+        openProductModalFromOffer(previewBtn.dataset.previewProduct);
+        return;
+      }
+
+      const productRow = e.target.closest('.offer-product-item[data-product-id]');
+      if (productRow) {
+        openProductModalFromOffer(productRow.dataset.productId);
       }
     });
 
