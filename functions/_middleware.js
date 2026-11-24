@@ -50,7 +50,7 @@ async function loadStoreMetaSettings(db) {
 async function resolveOfferShareImage(db, offer, items, origin, fallbackLogoUrl) {
   const safeOfferId = encodeURIComponent(String(offer?.id || "").trim());
   const compositeUrl = safeOfferId
-    ? `${origin}/api/image/offer-share/${safeOfferId}.svg`
+    ? `${origin}/api/image/offer-share/${safeOfferId}.png`
     : "";
 
   const firstProductId = Array.isArray(items) && items.length > 0
