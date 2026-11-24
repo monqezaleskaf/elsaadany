@@ -248,27 +248,6 @@
 
       document.getElementById('shareModal').classList.remove('hidden');
     }
-      document.getElementById('shareWa').href = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
-      document.getElementById('shareFb').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-      document.getElementById('shareTg').href = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
-
-      document.getElementById('shareCopy').onclick = async () => {
-        try {
-          await navigator.clipboard.writeText(url);
-          showToast('📋 تم نسخ رابط العرض');
-          document.getElementById('shareModal').classList.add('hidden');
-        } catch (e) {
-          showToast('❌ فشل النسخ');
-        }
-      };
-
-      const closeMenu = () => document.getElementById('shareModal').classList.add('hidden');
-      document.getElementById('shareWa').onclick = closeMenu;
-      document.getElementById('shareFb').onclick = closeMenu;
-      document.getElementById('shareTg').onclick = closeMenu;
-
-      document.getElementById('shareModal').classList.remove('hidden');
-    }
 
     async function loadOffers() {
       try {
