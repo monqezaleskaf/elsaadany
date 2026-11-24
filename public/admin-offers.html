@@ -602,6 +602,18 @@
         });
         const data = await res.json();
         if (!data.ok) throw new Error(data.error);
+
+        try {
+          await fetch('/api/upload-offer-image', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Admin-Password': adminPassword
+            },
+            body: JSON.stringify({ offer_id: id })
+          });
+        } catch (_) {}
+
         loadOffers();
       } catch (e) { alert('❌ ' + e.message); }
     };
