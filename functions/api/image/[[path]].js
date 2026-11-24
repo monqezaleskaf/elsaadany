@@ -53,7 +53,7 @@ export async function onRequestGet({ params }) {
       if (!offerId || offerId === "." || offerId === "..") {
         return imageError("معرّف العرض غير صالح", 400);
       }
-      return await buildOfferCompositeSvgResponse(offerId, context?.env);
+      return await buildOfferCompositeSvgResponse(offerId, env);
     } else {
       return imageError("مسار الصورة غير مسموح", 404);
     }
@@ -109,7 +109,7 @@ export async function onRequestGet({ params }) {
   }
 }
 
-export async function onRequest({ request }) {
+export async function onRequest({ request, env }) {
   if (request.method === "GET") {
     return imageError("حدث خطأ في معالجة طلب الصورة", 500);
   }
