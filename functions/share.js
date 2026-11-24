@@ -70,28 +70,84 @@ export async function onRequestGet(context) {
 
     const redirectUrl = redirect.href;
 
-    // 6. تجهيز صورة المشاركة من image_url فقط
-    let imageUrl = "";
-
-    if (
-      typeof product.image_url === "string" &&
-      product.image_url.trim()
-    ) {
+    // 6. تجهيز صورة المشاركة مع بدائل تلقائية في حال كان image_url فارغاً
+    const isValidHttpUrl = (candidate) => {
       try {
-        const parsedImageUrl = new URL(
-          product.image_url.trim(),
-          url.origin
-        );
-
-        if (
-          parsedImageUrl.protocol === "https:" ||
-          parsedImageUrl.protocol === "http:"
-        ) {
-          imageUrl = parsedImageUrl.href;
+        const parsed = new URL(candidate, url.origin);
+        if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+          return parsed.href;
         }
       } catch {
-        imageUrl = "";
+        return "";
       }
+      return "";
+    };
+
+    const imageExistsAtUrl = async (candidateUrl) => {
+      try {
+        const headRes = await fetch(candidateUrl, { method: "HEAD" });
+        if (headRes.ok) {
+          const contentType = headRes.headers.get("content-type") || "";
+          return !contentType || contentType.startsWith("image/");
+        }
+      } catch {
+        // نجرّب GET كخيار احتياطي إذا السيرفر لا يدعم HEAD
+      }
+
+      try {
+        const getRes = await fetch(candidateUrl, { method: "GET" });
+        if (getRes.ok) {
+          const contentType = getRes.headers.get("content-type") || "";
+          return !contentType || contentType.startsWith("image/");
+        }
+      } catch {
+        return false;
+      }
+
+      return false;
+    };
+
+    let imageUrl = "";
+    const directDbImage =
+      typeof product.image_url === "string" ? product.image_url.trim() : "";
+
+    if (directDbImage) {
+      imageUrl = isValidHttpUrl(directDbImage);
+    }
+
+    if (!imageUrl) {
+      const safeId = encodeURIComponent(String(product.id || "").trim());
+      const fallbackCandidates = safeId
+        ? [
+            `/api/image/products/${safeId}.webp`,
+            `/api/image/products/${safeId}.jpg`,
+            `/api/image/products/${safeId}.jpeg`,
+            `/api/image/products/${safeId}.png`,
+            `/images/products/${safeId}.webp`,
+            `/images/products/${safeId}.jpg`,
+            `/images/products/${safeId}.png`
+          ]
+        : [];
+
+      for (const relPath of fallbackCandidates) {
+        const fullCandidateUrl = isValidHttpUrl(relPath);
+        if (fullCandidateUrl && (await imageExistsAtUrl(fullCandidateUrl))) {
+          imageUrl = fullCandidateUrl;
+          break;
+        }
+      }
+    }
+
+    if (!imageUrl) {
+      const storeLogoResult = await env.DB.prepare(`
+        SELECT value
+        FROM settings
+        WHERE key = 'store_logo_url'
+        LIMIT 1
+      `).first();
+
+      const rawStoreLogo = String(storeLogoResult?.value || "").trim();
+      imageUrl = isValidHttpUrl(rawStoreLogo) || isValidHttpUrl("/images/logo.png");
     }
 
     // 7. تأمين النصوص قبل إدراجها في HTML
