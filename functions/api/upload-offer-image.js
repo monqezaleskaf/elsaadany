@@ -4,18 +4,32 @@ const GITHUB_BRANCH = "main";
 
 export async function onRequestPost({ request, env }) {
   try {
-    const adminPassword = env?.ADMIN_PASSWORD;
     const providedPassword = request.headers.get("X-Admin-Password") || "";
+    let validAdmin = false;
 
-    if (adminPassword && providedPassword !== adminPassword) {
-      return jsonResponse({ ok: false, error: "غير مصرح لك بالوصول" }, 401);
+    if (env?.DB && providedPassword) {
+      const adminRow = await env.DB
+        .prepare("SELECT value FROM settings WHERE key = ?")
+        .bind("admin_password")
+        .first();
+      if (adminRow && adminRow.value === providedPassword) {
+        validAdmin = true;
+      }
     }
 
-    const githubToken = env?.GITHUB_TOKEN;
+    if (!validAdmin && env?.ADMIN_PASSWORD && providedPassword === env.ADMIN_PASSWORD) {
+      validAdmin = true;
+    }
+
+    if (!validAdmin) {
+      return jsonResponse({ ok: false, error: "غير مصرح بالوصول" }, 401);
+    }
+
+    const githubToken = env?.GITHUB_ASSETS_TOKEN || env?.GITHUB_TOKEN;
     if (!githubToken) {
       return jsonResponse(
-        { ok: false, error: "متغير البيئة GITHUB_TOKEN غير مضبوط" },
-        500
+        { ok: false, error: "إعداد الاتصال بمستودع الصور غير مكتمل" },
+        503
       );
     }
 
@@ -33,28 +47,42 @@ export async function onRequestPost({ request, env }) {
     }
 
     const filePath = `offers/${offerId}.png`;
-    const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${filePath}`;
+    const encodedPath = filePath
+      .split("/")
+      .map((segment) => encodeURIComponent(segment))
+      .join("/");
 
-    const commonHeaders = {
+    const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${encodedPath}`;
+
+    const githubHeaders = {
       Authorization: `Bearer ${githubToken}`,
       Accept: "application/vnd.github+json",
-      "Content-Type": "application/json",
-      "User-Agent": "Cloudflare-Pages-Offer-Uploader"
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "Elsaadany-Store"
     };
 
     let existingSha = null;
     const checkRes = await fetch(`${apiUrl}?ref=${encodeURIComponent(GITHUB_BRANCH)}`, {
       method: "GET",
-      headers: commonHeaders
+      headers: githubHeaders
     });
 
     if (checkRes.ok) {
       const checkData = await checkRes.json().catch(() => null);
       existingSha = checkData?.sha || null;
+    } else if (checkRes.status !== 404) {
+      return jsonResponse(
+        {
+          ok: false,
+          error: "تعذر التحقق من الملف الموجود في مستودع الصور",
+          github_status: checkRes.status
+        },
+        502
+      );
     }
 
     const payload = {
-      message: `chore: update offer grid image for offer #${offerId}`,
+      message: `Upload or update offer grid image offers/${offerId}.png`,
       content: imageBase64,
       branch: GITHUB_BRANCH
     };
@@ -65,27 +93,32 @@ export async function onRequestPost({ request, env }) {
 
     const uploadRes = await fetch(apiUrl, {
       method: "PUT",
-      headers: commonHeaders,
+      headers: {
+        ...githubHeaders,
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(payload)
     });
-
-    const uploadData = await uploadRes.json().catch(() => ({}));
 
     if (!uploadRes.ok) {
       return jsonResponse(
         {
           ok: false,
-          error: uploadData?.message || "تعذر رفع صورة العرض إلى المستودع",
+          error: "فشل رفع صورة العرض إلى مستودع GitHub",
           github_status: uploadRes.status
         },
-        500
+        502
       );
     }
 
+    const uploadData = await uploadRes.json().catch(() => ({}));
+    const commitSha = uploadData?.commit?.sha || null;
+
     return jsonResponse({
       ok: true,
+      success: true,
       path: filePath,
-      commit: uploadData?.commit?.sha || null
+      version: commitSha
     });
   } catch (err) {
     return jsonResponse(
