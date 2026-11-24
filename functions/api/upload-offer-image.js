@@ -14,14 +14,15 @@ export async function onRequestPost({ request, env }) {
     const githubToken = env?.GITHUB_TOKEN;
     if (!githubToken) {
       return jsonResponse(
-        { ok: false, error: "رمز الوصول للمستودع غير مضبوط في متغيرات البيئة" },
+        { ok: false, error: "متغير البيئة GITHUB_TOKEN غير مضبوط" },
         500
       );
     }
 
     const body = await request.json().catch(() => null);
     const offerId = String(body?.offer_id || "").trim();
-    const imageBase64 = String(body?.image_base64 || "").trim();
+    const rawBase64 = String(body?.image_base64 || "").trim();
+    const imageBase64 = rawBase64.includes(",") ? rawBase64.split(",").pop().trim() : rawBase64;
 
     if (!offerId || !/^[a-zA-Z0-9_-]+$/.test(offerId)) {
       return jsonResponse({ ok: false, error: "معرّف العرض غير صالح" }, 400);
@@ -74,9 +75,10 @@ export async function onRequestPost({ request, env }) {
       return jsonResponse(
         {
           ok: false,
-          error: uploadData?.message || "تعذر رفع صورة العرض إلى المستودع"
+          error: uploadData?.message || "تعذر رفع صورة العرض إلى المستودع",
+          github_status: uploadRes.status
         },
-        uploadRes.status
+        500
       );
     }
 
