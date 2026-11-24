@@ -48,6 +48,11 @@ async function loadStoreMetaSettings(db) {
 }
 
 async function resolveOfferShareImage(db, offer, items, origin, fallbackLogoUrl) {
+  const safeOfferId = encodeURIComponent(String(offer?.id || "").trim());
+  const compositeUrl = safeOfferId
+    ? `${origin}/api/image/offer-share/${safeOfferId}.svg`
+    : "";
+
   const firstProductId = Array.isArray(items) && items.length > 0
     ? encodeURIComponent(String(items[0]?.product_id || "").trim())
     : "";
@@ -55,12 +60,7 @@ async function resolveOfferShareImage(db, offer, items, origin, fallbackLogoUrl)
     ? `${origin}/api/image/products/${firstProductId}.webp`
     : "";
 
-  const safeOfferId = encodeURIComponent(String(offer?.id || "").trim());
-  const compositeUrl = safeOfferId
-    ? `${origin}/api/image/offer-share/${safeOfferId}.svg`
-    : "";
-
-  for (const candidate of [firstProductUrl, fallbackLogoUrl, compositeUrl]) {
+  for (const candidate of [compositeUrl, firstProductUrl, fallbackLogoUrl]) {
     const clean = String(candidate || "").trim();
     if (!clean) continue;
     try {
