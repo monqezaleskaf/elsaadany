@@ -47,11 +47,16 @@ export async function onRequestGet({ params, env }) {
     } else if (
       pathParts.length === 2 &&
       pathParts[0] === "offer-share" &&
-      pathParts[1].endsWith(".svg")
+      (pathParts[1].endsWith(".png") || pathParts[1].endsWith(".svg"))
     ) {
-      const offerId = decodeURIComponent(pathParts[1].slice(0, -4)).trim();
+      const isPng = pathParts[1].endsWith(".png");
+      const rawId = isPng ? pathParts[1].slice(0, -4) : pathParts[1].slice(0, -4);
+      const offerId = decodeURIComponent(rawId).trim();
       if (!offerId || offerId === "." || offerId === "..") {
         return imageError("معرّف العرض غير صالح", 400);
+      }
+      if (isPng) {
+        return await buildOfferCompositePngResponse(offerId, env);
       }
       return await buildOfferCompositeSvgResponse(offerId, env);
     } else {
@@ -272,20 +277,76 @@ async function buildOfferCompositeSvgResponse(offerId, env) {
   }
 </svg>`;
 
-    return new Response(svg, {
-      status: 200,
-      headers: {
-        "Content-Type": "image/svg+xml; charset=utf-8",
-        "Cache-Control": "no-cache",
-        "X-Content-Type-Options": "nosniff"
+    async function buildOfferCompositePngResponse(offerId, env) {
+  try {
+    const db = env?.DB;
+    if (!db) {
+      return imageError("قاعدة البيانات غير متاحة", 500);
+    }
+
+    const offer = await db
+      .prepare("SELECT * FROM offers WHERE id = ? LIMIT 1")
+      .bind(offerId)
+      .first();
+
+    if (!offer) {
+      return imageError("العرض غير موجود", 404);
+    }
+
+    const itemsResult = await db
+      .prepare(
+        `SELECT oi.*, p.name as product_name, p.price as product_price
+         FROM offer_items oi
+         JOIN products p ON p.id = oi.product_id
+         WHERE oi.offer_id = ?`
+      )
+      .bind(offer.id)
+      .all();
+
+    const items = itemsResult?.results || [];
+    const firstItem = items[0] || null;
+    const firstPid = String(firstItem?.product_id || "").trim();
+
+    if (firstPid && firstPid !== "." && firstPid !== "..") {
+      const encodedPid = encodeURIComponent(firstPid);
+      const rawUrl = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/products/${encodedPid}.webp`;
+      try {
+        const res = await fetch(rawUrl, { method: "GET" });
+        if (res.ok) {
+          const buf = await res.arrayBuffer();
+          return new Response(buf, {
+            status: 200,
+            headers: {
+              "Content-Type": "image/webp",
+              "Cache-Control": "no-cache",
+              "X-Content-Type-Options": "nosniff"
+            }
+          });
+        }
+      } catch {
+        // نكمل للخيار الاحتياطي
       }
-    });
+    }
+
+    const logoUrl = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/Logo.png`;
+    const logoRes = await fetch(logoUrl, { method: "GET" });
+    if (logoRes.ok) {
+      const logoBuf = await logoRes.arrayBuffer();
+      return new Response(logoBuf, {
+        status: 200,
+        headers: {
+          "Content-Type": "image/png",
+          "Cache-Control": "no-cache",
+          "X-Content-Type-Options": "nosniff"
+        }
+      });
+    }
+
+    return imageError("تعذر تجهيز صورة العرض", 404);
   } catch (err) {
     return imageError("حدث خطأ أثناء تجهيز صورة العرض: " + (err?.message || ""), 500);
   }
 }
-
-function imageError(message, status) {
   return new Response(message, {
     status,
     headers: {
