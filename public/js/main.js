@@ -443,12 +443,10 @@ function renderProductModal(p) {
   pmError.classList.add('hidden');
   pmContent.classList.remove('hidden');
 
-  // فرض توزيع 65% للصورة و35% للتفاصيل داخل النافذة المنبثقة
+  // تنسيق محتوى النافذة بشكل متناسق وملموم
   if (pmContent) {
     pmContent.style.display = 'flex';
     pmContent.style.flexDirection = 'column';
-    pmContent.style.flex = '1 1 auto';
-    pmContent.style.minHeight = '0';
     pmContent.style.gap = '6px';
     pmContent.style.textAlign = 'right';
   }
@@ -479,9 +477,8 @@ function renderProductModal(p) {
     const imgWrap = document.querySelector('.pm-image-wrap');
     if (imgWrap && img) {
       const freshWrap = imgWrap.cloneNode(true);
-      freshWrap.style.flex = '0 0 65%';
-      freshWrap.style.height = '65%';
-      freshWrap.style.minHeight = '0';
+      freshWrap.style.height = '52vh';
+      freshWrap.style.minHeight = '220px';
       freshWrap.style.width = '100%';
       imgWrap.parentNode.replaceChild(freshWrap, imgWrap);
       const freshImg = freshWrap.querySelector('img');
