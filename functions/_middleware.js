@@ -48,11 +48,6 @@ async function loadStoreMetaSettings(db) {
 }
 
 async function resolveOfferShareImage(db, offer, items, origin, fallbackLogoUrl) {
-  const safeOfferId = encodeURIComponent(String(offer?.id || "").trim());
-  const compositeUrl = safeOfferId
-    ? `${origin}/api/image/offer-share/${safeOfferId}.svg`
-    : "";
-
   const firstProductId = Array.isArray(items) && items.length > 0
     ? encodeURIComponent(String(items[0]?.product_id || "").trim())
     : "";
@@ -60,11 +55,16 @@ async function resolveOfferShareImage(db, offer, items, origin, fallbackLogoUrl)
     ? `${origin}/api/image/products/${firstProductId}.webp`
     : "";
 
-  for (const candidate of [compositeUrl, firstProductUrl, fallbackLogoUrl]) {
+  const safeOfferId = encodeURIComponent(String(offer?.id || "").trim());
+  const compositeUrl = safeOfferId
+    ? `${origin}/api/image/offer-share/${safeOfferId}.svg`
+    : "";
+
+  for (const candidate of [firstProductUrl, fallbackLogoUrl, compositeUrl]) {
     const clean = String(candidate || "").trim();
     if (!clean) continue;
     try {
-      const res = await fetch(clean, { method: "HEAD" });
+      const res = await fetch(clean, { method: "GET" });
       if (res.ok) {
         const contentType = String(res.headers.get("content-type") || "").toLowerCase();
         if (!contentType || contentType.startsWith("image/")) {
@@ -176,9 +176,10 @@ export async function onRequest(context) {
   const { env, request, next } = context;
   const url = new URL(request.url);
 
-  const isHomePage = url.pathname === "/" || url.pathname === "/index.html";
+  const cleanPath = url.pathname.replace(/\/+$/, "") || "/";
+  const isHomePage = cleanPath === "/" || cleanPath === "/index.html";
   const isOffersPageWithId =
-    url.pathname === "/offers.html" &&
+    (cleanPath === "/offers.html" || cleanPath === "/offers") &&
     Boolean(String(url.searchParams.get("offer") || "").trim());
 
   if (!isHomePage && !isOffersPageWithId) {
