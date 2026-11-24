@@ -26,15 +26,19 @@
     .pm-image-wrap {
       position: relative;
       width: 100%;
-      min-height: 360px;
-      aspect-ratio: 12 / 11;
-      max-height: 62vh;
       background: #f9fafb;
       border-radius: var(--radius-sm);
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+    .pm-image-wrap img {
+      width: 100%;
+      max-height: 55vh;
+      height: auto;
+      object-fit: contain;
+      display: block;
     }
     .pm-image-wrap img {
       width: 100%;

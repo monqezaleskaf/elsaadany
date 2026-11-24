@@ -26,9 +26,6 @@
     .pm-image-wrap {
       position: relative;
       width: 100%;
-      min-height: 360px;
-      aspect-ratio: 12 / 11;
-      max-height: 62vh;
       background: #f9fafb;
       border-radius: var(--radius-sm);
       overflow: hidden;
@@ -38,6 +35,26 @@
       cursor: zoom-in;
       user-select: none;
       touch-action: none;
+    }
+    .pm-image-wrap.is-zoomed {
+      cursor: grab;
+    }
+    .pm-image-wrap.is-dragging {
+      cursor: grabbing;
+    }
+    .pm-image-wrap img {
+      width: 100%;
+      max-height: 55vh;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      transform-origin: center center;
+      transform: translate(0px, 0px) scale(1);
+      transition: transform 0.08s ease-out;
+      will-change: transform;
+    }
+    .pm-image-wrap.is-dragging img {
+      transition: none;
     }
     .pm-image-wrap.is-zoomed {
       cursor: grab;
