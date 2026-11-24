@@ -320,24 +320,33 @@ function buildProductCard(p) {
   };
 
   // ---------- Share ----------
-  shareBtn.onclick = async () => {
+  shareBtn.onclick = () => {
     const arEl = document.querySelector('.brand-text .ar');
     const enEl = document.querySelector('.brand-text .en');
     const storeName = (arEl && arEl.textContent.trim()) || (enEl && enEl.textContent.trim()) || 'متجرنا';
-    const url = `${location.origin}/product.html?id=${p.id}`;
-    const shareData = {
-      title: p.name,
-      text: `شاهد ${p.name} على ${storeName}`,
-      url
-    };
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
+    const url = `${location.origin}/share?id=${p.id}`;
+    const text = `شاهد ${p.name} على ${storeName}`;
+
+    document.getElementById('shareWa').href = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+    document.getElementById('shareFb').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    document.getElementById('shareTg').href = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+
+    document.getElementById('shareCopy').onclick = async () => {
+      try {
         await navigator.clipboard.writeText(url);
         showToast('📋 تم نسخ رابط المنتج');
+        document.getElementById('shareModal').classList.add('hidden');
+      } catch (e) {
+        showToast('❌ فشل النسخ');
       }
-    } catch (e) { /* المستخدم ألغى */ }
+    };
+
+    const closeMenu = () => document.getElementById('shareModal').classList.add('hidden');
+    document.getElementById('shareWa').onclick = closeMenu;
+    document.getElementById('shareFb').onclick = closeMenu;
+    document.getElementById('shareTg').onclick = closeMenu;
+
+    document.getElementById('shareModal').classList.remove('hidden');
   };
 
   // ---------- Trash (remove from cart) ----------
