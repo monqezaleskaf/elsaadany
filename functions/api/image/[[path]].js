@@ -318,11 +318,38 @@ async function buildOfferCompositePngResponse(offerId, env) {
       .all();
 
     const items = itemsResult?.results || [];
-    const firstItem = items[0] || null;
-    const firstPid = String(firstItem?.product_id || "").trim();
 
-    if (firstPid && firstPid !== "." && firstPid !== "..") {
-      const encodedPid = encodeURIComponent(firstPid);
+    const offerImageCandidates = [
+      `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/offers/${encodeURIComponent(String(offer.id))}.png`,
+      `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/offers/${encodeURIComponent(String(offer.id))}.webp`
+    ];
+
+    for (const offerImgUrl of offerImageCandidates) {
+      try {
+        const res = await fetch(offerImgUrl, { method: "GET" });
+        if (res.ok) {
+          const buf = await res.arrayBuffer();
+          const mimeType = offerImgUrl.endsWith(".png") ? "image/png" : "image/webp";
+          return new Response(buf, {
+            status: 200,
+            headers: {
+              "Content-Type": mimeType,
+              "Cache-Control": "no-cache",
+              "X-Content-Type-Options": "nosniff"
+            }
+          });
+        }
+      } catch {
+        // نكمل للخيار التالي
+      }
+    }
+
+    for (const item of items) {
+      const pid = String(item?.product_id || "").trim();
+      if (!pid || pid === "." || pid === "..") {
+        continue;
+      }
+      const encodedPid = encodeURIComponent(pid);
       const rawUrl = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/products/${encodedPid}.webp`;
       try {
         const res = await fetch(rawUrl, { method: "GET" });
@@ -338,7 +365,7 @@ async function buildOfferCompositePngResponse(offerId, env) {
           });
         }
       } catch {
-        // نكمل للخيار الاحتياطي
+        // نكمل للمنتج التالي
       }
     }
 
