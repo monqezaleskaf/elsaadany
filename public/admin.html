@@ -550,14 +550,7 @@
     function printSingleOrder(order) {
       if (!order || !order.id) return;
       const printUrl = `/invoice.html?id=${encodeURIComponent(order.id)}&print=1`;
-      const win = window.open(printUrl, '_blank');
-
-      setTimeout(() => {
-        const opened = Boolean(win && !win.closed && win.location && win.location.href);
-        if (!opened) {
-          alert('يرجى السماح بالنوافذ المنبثقة لفتح صفحة الطباعة.');
-        }
-      }, 300);
+      window.open(printUrl, '_blank');
     }
 
     // ---------- APPROVE ----------
