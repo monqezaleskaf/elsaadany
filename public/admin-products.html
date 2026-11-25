@@ -135,7 +135,109 @@
       border-radius: var(--radius-sm);
       font-size: 1rem;
       font-family: inherit;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
+      background: var(--card-bg);
+      color: var(--text);
+    }
+
+    .columns-toolbar-wrap {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .columns-filter-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(120px, 1fr));
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .col-control-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 120px;
+    }
+
+    .col-sort-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      background: transparent;
+      border: none;
+      padding: 2px 4px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--primary);
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .col-sort-btn:hover {
+      background: rgba(0, 64, 192, 0.08);
+    }
+
+    .col-sort-btn.active {
+      background: #e0e7ff;
+      color: var(--primary);
+    }
+
+    .col-filter-input,
+    .col-filter-select {
+      width: 100%;
+      padding: 5px 7px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      background: var(--card-bg);
+      color: var(--text);
+    }
+
+    .columns-toolbar-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .btn-reset-cols {
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-reset-cols:hover {
+      background: #e5e7eb;
+    }
+
+    .status-pill-admin {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
     }
 
     #productsAdminList {
@@ -313,7 +415,55 @@
     </div>
   </div>
 
-  <input type="text" id="searchAdmin" class="search-bar-admin" placeholder="🔍 بحث بالاسم أو الرقم...">
+  <input type="text" id="searchAdmin" class="search-bar-admin" placeholder="🔍 بحث شامل بالاسم أو الرقم أو الماركة أو القسم أو الوصف...">
+
+  <div class="columns-toolbar-wrap" id="columnsToolbar">
+    <div class="columns-filter-grid">
+      <div class="col-control-box">
+        <button type="button" class="col-sort-btn" data-sort-col="id"># الرقم <span class="sort-indicator">↕</span></button>
+        <input type="text" id="filterColId" class="col-filter-input" placeholder="فلتر الرقم...">
+      </div>
+
+      <div class="col-control-box">
+        <button type="button" class="col-sort-btn" data-sort-col="name">الاسم <span class="sort-indicator">↕</span></button>
+        <input type="text" id="filterColName" class="col-filter-input" placeholder="فلتر الاسم...">
+      </div>
+
+      <div class="col-control-box">
+        <button type="button" class="col-sort-btn" data-sort-col="brand">الماركة <span class="sort-indicator">↕</span></button>
+        <input type="text" id="filterColBrand" class="col-filter-input" placeholder="فلتر الماركة...">
+      </div>
+
+      <div class="col-control-box">
+        <button type="button" class="col-sort-btn" data-sort-col="category">القسم <span class="sort-indicator">↕</span></button>
+        <input type="text" id="filterColCategory" class="col-filter-input" placeholder="فلتر القسم...">
+      </div>
+
+      <div class="col-control-box">
+        <button type="button" class="col-sort-btn" data-sort-col="price">السعر <span class="sort-indicator">↕</span></button>
+        <input type="text" id="filterColPrice" class="col-filter-input" placeholder="فلتر السعر...">
+      </div>
+
+      <div class="col-control-box">
+        <button type="button" class="col-sort-btn" data-sort-col="stock">المخزون <span class="sort-indicator">↕</span></button>
+        <input type="text" id="filterColStock" class="col-filter-input" placeholder="فلتر المخزون...">
+      </div>
+
+      <div class="col-control-box">
+        <button type="button" class="col-sort-btn" data-sort-col="status">الحالة <span class="sort-indicator">↕</span></button>
+        <select id="filterColStatus" class="col-filter-select">
+          <option value="all">الكل (ظاهر ومخفي)</option>
+          <option value="visible">ظاهر فقط</option>
+          <option value="hidden">مخفي فقط</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="columns-toolbar-footer">
+      <span id="productsCountInfo">عدد النتائج: 0</span>
+      <button type="button" id="resetColumnsBtn" class="btn-reset-cols">↺ إعادة ضبط الفلاتر والترتيب</button>
+    </div>
+  </div>
 
   <div id="loading" class="loading">⏳ جاري التحميل...</div>
   <div id="emptyState" class="empty-state hidden">
@@ -466,6 +616,7 @@
   let addImageFile = null;
   let editImageFile = null;
   let currentEditProduct = null;
+  let sortState = { col: null, dir: "asc" };
 
   function formatCurrency(amount) {
     const num = Number(amount || 0).toFixed(2);
@@ -536,8 +687,7 @@
       localStorage.setItem("store_timezone", nextTimezone);
 
       if (changed && allProducts.length) {
-        const query = $("#searchAdmin")?.value.trim().toLowerCase() || "";
-        renderList(query ? filterProducts(query) : allProducts);
+        applyAndRenderProducts();
       }
     } catch (e) {}
   }
@@ -637,7 +787,7 @@
     if (initialProducts) {
       allProducts = initialProducts;
       loading.style.display = "none";
-      renderList(allProducts);
+      applyAndRenderProducts();
     } else {
       loadProducts();
     }
@@ -659,28 +809,118 @@
       allProducts = Array.isArray(data.products) ? data.products : [];
 
       loading.style.display = "none";
-
-      const query = $("#searchAdmin").value.trim().toLowerCase();
-
-      if (query) {
-        renderList(filterProducts(query));
-      } else {
-        renderList(allProducts);
-      }
+      applyAndRenderProducts();
     } catch (error) {
       loading.style.display = "none";
       showError(error.message);
     }
   }
 
-  function filterProducts(query) {
-    return allProducts.filter(product => {
-      const name = String(product.name || "").toLowerCase();
-      const id = String(product.id || "").toLowerCase();
-      const brand = String(product.brand || "").toLowerCase();
+  function getFilteredAndSortedProducts() {
+    const globalQuery = ($("#searchAdmin")?.value || "").trim().toLowerCase();
+    const qId = ($("#filterColId")?.value || "").trim().toLowerCase();
+    const qName = ($("#filterColName")?.value || "").trim().toLowerCase();
+    const qBrand = ($("#filterColBrand")?.value || "").trim().toLowerCase();
+    const qCategory = ($("#filterColCategory")?.value || "").trim().toLowerCase();
+    const qPrice = ($("#filterColPrice")?.value || "").trim().toLowerCase();
+    const qStock = ($("#filterColStock")?.value || "").trim().toLowerCase();
+    const statusFilter = $("#filterColStatus")?.value || "all";
 
-      return name.includes(query) || id.includes(query) || brand.includes(query);
+    let list = allProducts.filter(product => {
+      const isHidden = Number(product.is_hidden) === 1;
+      if (statusFilter === "visible" && isHidden) return false;
+      if (statusFilter === "hidden" && !isHidden) return false;
+
+      const idStr = String(product.id ?? "").toLowerCase();
+      const nameStr = String(product.name ?? "").toLowerCase();
+      const brandStr = String(product.brand ?? "").toLowerCase();
+      const catStr = String(product.category ?? "").toLowerCase();
+      const priceStr = String(product.price ?? "").toLowerCase();
+      const formattedPriceStr = formatCurrency(product.price).toLowerCase();
+      const stockStr = String(product.stock ?? "").toLowerCase();
+      const descStr = String(product.description ?? "").toLowerCase();
+      const statusStr = isHidden ? "مخفي hidden" : "ظاهر visible";
+
+      if (qId && !idStr.includes(qId)) return false;
+      if (qName && !nameStr.includes(qName)) return false;
+      if (qBrand && !brandStr.includes(qBrand)) return false;
+      if (qCategory && !catStr.includes(qCategory)) return false;
+      if (qPrice && !priceStr.includes(qPrice) && !formattedPriceStr.includes(qPrice)) return false;
+      if (qStock && !stockStr.includes(qStock)) return false;
+
+      if (globalQuery) {
+        const matchesGlobal =
+          idStr.includes(globalQuery) ||
+          nameStr.includes(globalQuery) ||
+          brandStr.includes(globalQuery) ||
+          catStr.includes(globalQuery) ||
+          priceStr.includes(globalQuery) ||
+          formattedPriceStr.includes(globalQuery) ||
+          stockStr.includes(globalQuery) ||
+          descStr.includes(globalQuery) ||
+          statusStr.includes(globalQuery);
+        if (!matchesGlobal) return false;
+      }
+
+      return true;
     });
+
+    if (sortState.col) {
+      const factor = sortState.dir === "desc" ? -1 : 1;
+      list = [...list].sort((a, b) => {
+        switch (sortState.col) {
+          case "id": {
+            const numA = Number(a.id);
+            const numB = Number(b.id);
+            if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
+              return (numA - numB) * factor;
+            }
+            return String(a.id || "").localeCompare(String(b.id || ""), "ar", { numeric: true }) * factor;
+          }
+          case "price":
+            return ((Number(a.price) || 0) - (Number(b.price) || 0)) * factor;
+          case "stock":
+            return ((Number(a.stock) || 0) - (Number(b.stock) || 0)) * factor;
+          case "status":
+            return ((Number(a.is_hidden) === 1 ? 1 : 0) - (Number(b.is_hidden) === 1 ? 1 : 0)) * factor;
+          case "brand":
+            return String(a.brand || "").localeCompare(String(b.brand || ""), "ar", { sensitivity: "base" }) * factor;
+          case "category":
+            return String(a.category || "").localeCompare(String(b.category || ""), "ar", { sensitivity: "base" }) * factor;
+          case "name":
+          default:
+            return String(a.name || "").localeCompare(String(b.name || ""), "ar", { sensitivity: "base" }) * factor;
+        }
+      });
+    }
+
+    return list;
+  }
+
+  function updateSortButtonsUI() {
+    document.querySelectorAll(".col-sort-btn").forEach(btn => {
+      const col = btn.dataset.sortCol;
+      const indicator = btn.querySelector(".sort-indicator");
+      if (sortState.col === col) {
+        btn.classList.add("active");
+        if (indicator) indicator.textContent = sortState.dir === "asc" ? "↑" : "↓";
+      } else {
+        btn.classList.remove("active");
+        if (indicator) indicator.textContent = "↕";
+      }
+    });
+  }
+
+  function applyAndRenderProducts() {
+    updateSortButtonsUI();
+    const filtered = getFilteredAndSortedProducts();
+    const visibleCount = allProducts.filter(p => Number(p.is_hidden) !== 1).length;
+    const hiddenCount = allProducts.filter(p => Number(p.is_hidden) === 1).length;
+    const countInfo = $("#productsCountInfo");
+    if (countInfo) {
+      countInfo.textContent = `المعروض: ${filtered.length} من أصل ${allProducts.length} (ظاهر: ${visibleCount} | مخفي: ${hiddenCount})`;
+    }
+    renderList(filtered);
   }
 
   function getAdminProductImageSrc(product, bustCache = true) {
@@ -710,6 +950,9 @@
       card.className = "product-admin-card";
 
       const isHidden = Number(product.is_hidden) === 1;
+      if (isHidden) {
+        card.style.opacity = "0.88";
+      }
 
       const imgSrc = getAdminProductImageSrc(product, true);
       if (imgSrc) {
@@ -760,6 +1003,13 @@
         ? "var(--success)"
         : "var(--danger)";
 
+      const statusBadge = document.createElement("span");
+      statusBadge.className = "status-pill-admin";
+      statusBadge.textContent = isHidden ? "🙈 مخفي" : "👁️ ظاهر";
+      statusBadge.style.background = isHidden ? "#fee2e2" : "#d1fae5";
+      statusBadge.style.color = isHidden ? "#991b1b" : "#065f46";
+      meta.appendChild(statusBadge);
+
       info.append(name, meta);
 
       const actions = document.createElement("div");
@@ -788,9 +1038,40 @@
     });
   }
 
-  $("#searchAdmin").addEventListener("input", event => {
-    renderList(filterProducts(event.target.value.trim().toLowerCase()));
+  ["#searchAdmin", "#filterColId", "#filterColName", "#filterColBrand", "#filterColCategory", "#filterColPrice", "#filterColStock"].forEach(sel => {
+    const el = $(sel);
+    if (el) el.addEventListener("input", applyAndRenderProducts);
   });
+
+  const statusSel = $("#filterColStatus");
+  if (statusSel) statusSel.addEventListener("change", applyAndRenderProducts);
+
+  document.querySelectorAll(".col-sort-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const col = btn.dataset.sortCol;
+      if (!col) return;
+      if (sortState.col === col) {
+        sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+      } else {
+        sortState.col = col;
+        sortState.dir = "asc";
+      }
+      applyAndRenderProducts();
+    });
+  });
+
+  const resetColsBtn = $("#resetColumnsBtn");
+  if (resetColsBtn) {
+    resetColsBtn.addEventListener("click", () => {
+      ["#searchAdmin", "#filterColId", "#filterColName", "#filterColBrand", "#filterColCategory", "#filterColPrice", "#filterColStock"].forEach(sel => {
+        const el = $(sel);
+        if (el) el.value = "";
+      });
+      if ($("#filterColStatus")) $("#filterColStatus").value = "all";
+      sortState = { col: null, dir: "asc" };
+      applyAndRenderProducts();
+    });
+  }
 
   // إخفاء وإظهار المنتج
   async function toggleProduct(product) {
