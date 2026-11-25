@@ -119,6 +119,47 @@
       font-weight: 700;
     }
     .btn-reject:hover { background: #dc2626; }
+
+    .btn-save-order {
+      background: #0284c7;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+    }
+    .btn-save-order:hover { background: #0369a1; }
+
+    .btn-print-order {
+      background: #475569;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+    }
+    .btn-print-order:hover { background: #334155; }
+
+    .btn-customer-invoice {
+      background: #eff6ff;
+      color: var(--primary);
+      border: 1px solid #bfdbfe;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-customer-invoice:hover { background: #dbeafe; }
+
+    @media print {
+      .site-header, #loginView, .tabs, .order-actions, .btn-delete-item {
+        display: none !important;
+      }
+      body { background: #fff !important; }
+      .order-card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
+      .order-item-row input { border: none !important; background: transparent !important; font-weight: 700; }
+    }
     
     .status-badge {
       padding: 4px 12px;
@@ -394,15 +435,21 @@
           </div>
         </div>
         <div class="order-body">${itemsHtml}</div>
-        ${isPending ? `
-          <div class="order-actions">
-            <button class="btn-approve">✅ موافقة (خصم المخزون)</button>
-            <button class="btn-reject">❌ رفض</button>
-          </div>
-        ` : ''}
+        <div class="order-actions">
+          ${isPending ? `
+            <button type="button" class="btn-save-order">💾 حفظ الفاتورة</button>
+            <button type="button" class="btn-approve">✅ موافقة (خصم المخزون)</button>
+            <button type="button" class="btn-reject">❌ رفض</button>
+          ` : ''}
+          <button type="button" class="btn-print-order">🖨️ طباعة</button>
+          <a href="/invoice.html?id=${encodeURIComponent(o.id)}" target="_blank" rel="noopener noreferrer" class="btn-customer-invoice">🧾 فاتورة العميل</a>
+        </div>
       `;
 
+      card.querySelector('.btn-print-order').onclick = () => printSingleOrder(o);
+
       if (isPending) {
+        card.querySelector('.btn-save-order').onclick = () => saveOrderChanges(o, card);
         card.querySelector('.btn-approve').onclick = () => approveOrder(o, card);
         card.querySelector('.btn-reject').onclick = () => rejectOrder(o);
         
@@ -440,6 +487,77 @@
       
       const totalDisplay = card.querySelector('.order-total-display span');
       if (totalDisplay) totalDisplay.textContent = formatCurrency(newTotal);
+    }
+
+    function collectEditedOrderPayload(o, card) {
+      const items = Array.from(card.querySelectorAll('.order-item-row')).map(row => {
+        const inp = row.querySelector('.qty-input');
+        const itemId = parseInt(row.dataset.itemId, 10);
+        const productId = inp?.dataset.pid;
+        const offerId = inp?.dataset.oid;
+        const quantity = Math.max(1, parseInt(inp?.value, 10) || 1);
+
+        if (offerId && offerId !== 'null' && offerId !== '') {
+          return { id: itemId, offer_id: parseInt(offerId, 10), quantity };
+        }
+        return { id: itemId, product_id: parseInt(productId, 10), quantity };
+      });
+
+      const currentItemIds = Array.from(card.querySelectorAll('.order-item-row')).map(r => parseInt(r.dataset.itemId, 10));
+      const originalItemIds = (o.items || []).map(it => it.id);
+      const deletedIds = originalItemIds.filter(id => !currentItemIds.includes(id));
+
+      let newTotal = 0;
+      card.querySelectorAll('.order-item-row').forEach(row => {
+        const price = parseFloat(row.dataset.price) || 0;
+        const qtyInput = row.querySelector('.qty-input');
+        const qty = qtyInput ? (Math.max(1, parseInt(qtyInput.value, 10) || 1)) : 0;
+        newTotal += price * qty;
+      });
+
+      return { items, deletedIds, total: newTotal };
+    }
+
+    // ---------- SAVE ORDER CHANGES ----------
+    async function saveOrderChanges(o, card) {
+      const { items, deletedIds, total } = collectEditedOrderPayload(o, card);
+
+      try {
+        const res = await fetch('/api/admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Password': adminPassword
+          },
+          body: JSON.stringify({
+            action: 'save',
+            order_id: o.id,
+            items,
+            deleted_item_ids: deletedIds,
+            total
+          })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'تعذر حفظ التعديلات');
+        alert('💾 تم حفظ تعديلات الفاتورة بنجاح');
+        loadOrders();
+      } catch (e) {
+        alert('❌ ' + e.message);
+      }
+    }
+
+    // ---------- PRINT SINGLE ORDER (A4 + 80mm via invoice.html) ----------
+    function printSingleOrder(order) {
+      if (!order || !order.id) return;
+      const printUrl = `/invoice.html?id=${encodeURIComponent(order.id)}&print=1`;
+      const win = window.open(printUrl, '_blank');
+
+      setTimeout(() => {
+        const opened = Boolean(win && !win.closed && win.location && win.location.href);
+        if (!opened) {
+          alert('يرجى السماح بالنوافذ المنبثقة لفتح صفحة الطباعة.');
+        }
+      }, 300);
     }
 
     // ---------- APPROVE ----------
