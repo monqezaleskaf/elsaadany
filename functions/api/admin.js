@@ -86,6 +86,66 @@ if (action === 'delete_status') {
 
 if (!order_id) return jsonError('order_id مطلوب', 400);
 
+      // حفظ التعديلات على الفاتورة بدون خصم المخزون أو تغيير الحالة
+      if (action === 'save') {
+        const orderRow = await env.DB.prepare(
+          'SELECT * FROM orders WHERE id = ?'
+        ).bind(order_id).first();
+        if (!orderRow) return jsonError('الطلب غير موجود', 404);
+        if (orderRow.status !== 'pending') return jsonError('لا يمكن تعديل طلب غير معلق', 400);
+
+        const stmts = [];
+
+        if (Array.isArray(deleted_item_ids) && deleted_item_ids.length > 0) {
+          for (const itemId of deleted_item_ids) {
+            stmts.push(
+              env.DB.prepare('DELETE FROM order_items WHERE id = ? AND order_id = ?')
+                .bind(itemId, order_id)
+            );
+          }
+        }
+
+        if (Array.isArray(items)) {
+          for (const it of items) {
+            if (Array.isArray(deleted_item_ids) && it.id && deleted_item_ids.includes(it.id)) continue;
+
+            const qty = Math.max(1, parseInt(it.quantity, 10) || 1);
+
+            if (it.id) {
+              stmts.push(
+                env.DB.prepare('UPDATE order_items SET quantity = ? WHERE id = ? AND order_id = ?')
+                  .bind(qty, it.id, order_id)
+              );
+            } else if (it.offer_id) {
+              stmts.push(
+                env.DB.prepare('UPDATE order_items SET quantity = ? WHERE order_id = ? AND offer_id = ?')
+                  .bind(qty, order_id, it.offer_id)
+              );
+            } else if (it.product_id) {
+              stmts.push(
+                env.DB.prepare('UPDATE order_items SET quantity = ? WHERE order_id = ? AND product_id = ?')
+                  .bind(qty, order_id, it.product_id)
+              );
+            }
+          }
+        }
+
+        if (stmts.length > 0) {
+          await env.DB.batch(stmts);
+        }
+
+        const remainingItems = await env.DB.prepare(
+          'SELECT SUM(quantity * price) as new_total FROM order_items WHERE order_id = ?'
+        ).bind(order_id).first();
+
+        const finalTotal = (remainingItems && remainingItems.new_total) ? remainingItems.new_total : 0;
+
+        await env.DB.prepare('UPDATE orders SET total = ? WHERE id = ?')
+          .bind(finalTotal, order_id).run();
+
+        return jsonOk({ message: 'تم حفظ تعديلات الفاتورة بنجاح', total: finalTotal });
+      }
+
 
       // الموافقة
       if (action === 'approve') {
